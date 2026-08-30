@@ -1,0 +1,43 @@
+.page { max-width: 700px; }
+
+.state { padding: 3rem; text-align: center; color: var(--slate); }
+
+.header { margin-bottom: 1.5rem; }
+.backBtn { background: none; border: none; color: var(--slate); font-size: .85rem; cursor: pointer; padding: 0; display: block; margin-bottom: .5rem; }
+.title { font-family: var(--font-head); font-size: 1.6rem; font-weight: 700; color: var(--navy); }
+.sub { color: var(--slate); font-size: .875rem; margin-top: .2rem; }
+
+.card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.75rem; margin-bottom: 1.25rem; }
+
+.cardTitle { font-family: var(--font-head); font-size: 1.05rem; font-weight: 600; color: var(--navy); margin-bottom: 1.25rem; padding-bottom: .75rem; border-bottom: 1.5px solid var(--border); }
+
+.partySection { margin-bottom: 1.5rem; }
+
+.formGroup { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+.field { display: flex; flex-direction: column; gap: .4rem; }
+.label { font-size: .85rem; font-weight: 500; color: var(--navy); }
+
+.input { padding: .65rem .875rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; outline: none; }
+.input:focus { border-color: var(--blue); }
+.input:disabled { background: var(--slate-lt); color: var(--slate); cursor: not-allowed; }
+
+.hint { font-size: .72rem; color: var(--slate); font-style: italic; }
+
+.error { background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius); padding: .875rem 1rem; color: var(--danger); font-size: .9rem; margin-bottom: 1rem; }
+
+.success { background: #f0fdf4; border: 1px solid #86efac; border-radius: var(--radius); padding: .875rem 1rem; color: var(--success); font-size: .9rem; margin-bottom: 1rem; }
+
+.actions { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1.5rem; }
+
+.cancelBtn { background: none; border: 1.5px solid var(--border); color: var(--slate); padding: .7rem 1.5rem; border-radius: var(--radius); font-size: .9rem; cursor: pointer; }
+.cancelBtn:hover { border-color: var(--slate); }
+
+.saveBtn { background: var(--blue); color: white; border: none; padding: .7rem 1.75rem; border-radius: var(--radius); font-size: .9rem; font-weight: 600; cursor: pointer; }
+.saveBtn:hover:not(:disabled) { background: #1d4ed8; }
+.saveBtn:disabled { opacity: .6; cursor: not-allowed; }
+
+@media (max-width: 600px) {
+  .formGroup { grid-template-columns: 1fr; }
+  .actions { flex-direction: column-reverse; }
+}

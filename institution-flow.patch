@@ -1,0 +1,994 @@
+diff --git a/middleware.ts b/middleware.ts
+index f167d73..d018271 100644
+--- a/middleware.ts
++++ b/middleware.ts
+@@ -1,18 +1,43 @@
+ import { NextRequest, NextResponse } from "next/server";
+ 
++const DASHBOARD_PREFIXES = [
++  "/dashboard",
++  "/students",
++  "/teachers",
++  "/members",
++  "/staffs",
++  "/invoices",
++  "/accounting",
++  "/settings",
++];
++
+ export function middleware(request: NextRequest) {
+   const token = request.cookies.get("access_token")?.value;
++  const institutionId = request.cookies.get("selected_institution_id")?.value;
+ 
+   const { pathname } = request.nextUrl;
+ 
+   const isAuthPage = pathname === "/login";
++  const isDashboardRoute = DASHBOARD_PREFIXES.some(
++    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
++  );
+ 
+   if (!token && !isAuthPage) {
+     return NextResponse.redirect(new URL("/login", request.url));
+   }
+ 
+   if (token && isAuthPage) {
+-    return NextResponse.redirect(new URL("/dashboard", request.url));
++    return NextResponse.redirect(new URL("/institutions", request.url));
++  }
++
++  if (token && !institutionId && isDashboardRoute) {
++    return NextResponse.redirect(new URL("/institutions", request.url));
++  }
++
++  if (token && pathname === "/") {
++    return NextResponse.redirect(
++      new URL(institutionId ? "/dashboard" : "/institutions", request.url)
++    );
+   }
+ 
+   return NextResponse.next();
+diff --git a/src/app/(auth)/forgot-password/page.tsx b/src/app/(auth)/forgot-password/page.tsx
+index e69de29..1de12b2 100644
+--- a/src/app/(auth)/forgot-password/page.tsx
++++ b/src/app/(auth)/forgot-password/page.tsx
+@@ -0,0 +1,14 @@
++export default function ForgotPasswordPage() {
++  return (
++    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
++      <div className="w-full max-w-sm rounded-xl border bg-white p-6 text-center shadow-sm">
++        <h1 className="text-lg font-semibold text-slate-800">
++          Forgot password
++        </h1>
++        <p className="mt-2 text-sm text-slate-500">
++          Password reset isn&apos;t wired up yet.
++        </p>
++      </div>
++    </main>
++  );
++}
+diff --git a/src/app/(dashboard)/accounting/page.tsx b/src/app/(dashboard)/accounting/page.tsx
+index e69de29..b975cfa 100644
+--- a/src/app/(dashboard)/accounting/page.tsx
++++ b/src/app/(dashboard)/accounting/page.tsx
+@@ -0,0 +1,6 @@
++import { redirect } from "next/navigation";
++
++// Accounting has been reorganized under Invoice & Billing.
++export default function AccountingPage() {
++  redirect("/invoices");
++}
+diff --git a/src/app/(dashboard)/dashboard/page.tsx b/src/app/(dashboard)/dashboard/page.tsx
+index 814eead..892960a 100644
+--- a/src/app/(dashboard)/dashboard/page.tsx
++++ b/src/app/(dashboard)/dashboard/page.tsx
+@@ -1,21 +1,38 @@
++"use client";
++
++import { useAppSelector } from "@/store/hooks";
++
+ export default function DashboardPage() {
++  const institution = useAppSelector(
++    (state) => state.institution.selectedInstitution
++  );
++
+   return (
+     <div className="space-y-6">
+ 
+-      <h1 className="text-2xl font-semibold text-slate-800">
+-        Dashboard
+-      </h1>
++      <div>
++        <h1 className="text-2xl font-semibold text-slate-800">
++          Dashboard
++        </h1>
++        {institution && (
++          <p className="text-sm text-slate-500">{institution.name}</p>
++        )}
++      </div>
+ 
+       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+ 
+         <div className="bg-white p-5 rounded-xl shadow-sm border">
+           <p className="text-slate-500">Students</p>
+-          <h2 className="text-2xl font-bold">1,240</h2>
++          <h2 className="text-2xl font-bold">
++            {institution?.students_count ?? "—"}
++          </h2>
+         </div>
+ 
+         <div className="bg-white p-5 rounded-xl shadow-sm border">
+           <p className="text-slate-500">Teachers</p>
+-          <h2 className="text-2xl font-bold">86</h2>
++          <h2 className="text-2xl font-bold">
++            {institution?.teachers_count ?? "—"}
++          </h2>
+         </div>
+ 
+         <div className="bg-white p-5 rounded-xl shadow-sm border">
+diff --git a/src/app/(dashboard)/invoices/page.tsx b/src/app/(dashboard)/invoices/page.tsx
+new file mode 100644
+index 0000000..fe7ef07
+--- /dev/null
++++ b/src/app/(dashboard)/invoices/page.tsx
+@@ -0,0 +1,16 @@
++import { Receipt } from "lucide-react";
++import PageContainer from "@/components/layout/PageContainer";
++
++export default function InvoicesPage() {
++  return (
++    <PageContainer
++      title="Invoice & Bill Generation"
++      description="Generate, send, and track invoices and bills."
++      icon={Receipt}
++    >
++      <div className="rounded-xl border bg-white p-8 text-center text-sm text-slate-500">
++        Invoice and billing tools will appear here.
++      </div>
++    </PageContainer>
++  );
++}
+diff --git a/src/app/(dashboard)/layout.tsx b/src/app/(dashboard)/layout.tsx
+index 92cc429..dd668ce 100644
+--- a/src/app/(dashboard)/layout.tsx
++++ b/src/app/(dashboard)/layout.tsx
+@@ -3,6 +3,7 @@
+ import { useState } from "react";
+ import Sidebar from "@/components/layout/Sidebar";
+ import Topbar from "@/components/layout/Topbar";
++import InstitutionGuard from "@/features/institutions/components/InstitutionGuard";
+ 
+ export default function DashboardLayout({
+   children,
+@@ -12,28 +13,30 @@ export default function DashboardLayout({
+   const [collapsed, setCollapsed] = useState(false);
+ 
+   return (
+-    <div className="flex h-screen bg-gray-50">
++    <InstitutionGuard>
++      <div className="flex h-screen bg-gray-50">
+ 
+-      {/* Sidebar */}
+-      <Sidebar
+-        collapsed={collapsed}
+-        setCollapsed={setCollapsed}
+-      />
+-
+-      {/* Main area */}
+-      <div className="flex flex-1 flex-col">
+-
+-        <Topbar
++        {/* Sidebar */}
++        <Sidebar
+           collapsed={collapsed}
+           setCollapsed={setCollapsed}
+         />
+ 
+-        <main className="flex-1 overflow-y-auto p-6">
+-          {children}
+-        </main>
++        {/* Main area */}
++        <div className="flex flex-1 flex-col">
+ 
+-      </div>
++          <Topbar
++            collapsed={collapsed}
++            setCollapsed={setCollapsed}
++          />
+ 
+-    </div>
++          <main className="flex-1 overflow-y-auto p-6">
++            {children}
++          </main>
++
++        </div>
++
++      </div>
++    </InstitutionGuard>
+   );
+ }
+\ No newline at end of file
+diff --git a/src/app/(dashboard)/members/page.tsx b/src/app/(dashboard)/members/page.tsx
+new file mode 100644
+index 0000000..e77851c
+--- /dev/null
++++ b/src/app/(dashboard)/members/page.tsx
+@@ -0,0 +1,16 @@
++import { Users } from "lucide-react";
++import PageContainer from "@/components/layout/PageContainer";
++
++export default function MembersPage() {
++  return (
++    <PageContainer
++      title="Members"
++      description="Manage institution members and their roles."
++      icon={Users}
++    >
++      <div className="rounded-xl border bg-white p-8 text-center text-sm text-slate-500">
++        Member management tools will appear here.
++      </div>
++    </PageContainer>
++  );
++}
+diff --git a/src/app/(dashboard)/settings/page.tsx b/src/app/(dashboard)/settings/page.tsx
+index e69de29..0f02547 100644
+--- a/src/app/(dashboard)/settings/page.tsx
++++ b/src/app/(dashboard)/settings/page.tsx
+@@ -0,0 +1,16 @@
++import { Settings as SettingsIcon } from "lucide-react";
++import PageContainer from "@/components/layout/PageContainer";
++
++export default function SettingsPage() {
++  return (
++    <PageContainer
++      title="Settings"
++      description="Institution and account preferences."
++      icon={SettingsIcon}
++    >
++      <div className="rounded-xl border bg-white p-8 text-center text-sm text-slate-500">
++        Settings will appear here.
++      </div>
++    </PageContainer>
++  );
++}
+diff --git a/src/app/(dashboard)/staffs/page.tsx b/src/app/(dashboard)/staffs/page.tsx
+new file mode 100644
+index 0000000..ea16019
+--- /dev/null
++++ b/src/app/(dashboard)/staffs/page.tsx
+@@ -0,0 +1,16 @@
++import { UserCog } from "lucide-react";
++import PageContainer from "@/components/layout/PageContainer";
++
++export default function StaffsPage() {
++  return (
++    <PageContainer
++      title="Staffs"
++      description="Manage non-teaching staff records and duties."
++      icon={UserCog}
++    >
++      <div className="rounded-xl border bg-white p-8 text-center text-sm text-slate-500">
++        Staff management tools will appear here.
++      </div>
++    </PageContainer>
++  );
++}
+diff --git a/src/app/(dashboard)/students/page.tsx b/src/app/(dashboard)/students/page.tsx
+index e69de29..1217a7a 100644
+--- a/src/app/(dashboard)/students/page.tsx
++++ b/src/app/(dashboard)/students/page.tsx
+@@ -0,0 +1,16 @@
++import { GraduationCap } from "lucide-react";
++import PageContainer from "@/components/layout/PageContainer";
++
++export default function StudentsPage() {
++  return (
++    <PageContainer
++      title="Students"
++      description="Manage student admissions, profiles, and class assignments."
++      icon={GraduationCap}
++    >
++      <div className="rounded-xl border bg-white p-8 text-center text-sm text-slate-500">
++        Student list and admission tools will appear here.
++      </div>
++    </PageContainer>
++  );
++}
+diff --git a/src/app/(dashboard)/teachers/page.tsx b/src/app/(dashboard)/teachers/page.tsx
+index e69de29..b1741e8 100644
+--- a/src/app/(dashboard)/teachers/page.tsx
++++ b/src/app/(dashboard)/teachers/page.tsx
+@@ -0,0 +1,16 @@
++import { BookOpen } from "lucide-react";
++import PageContainer from "@/components/layout/PageContainer";
++
++export default function TeachersPage() {
++  return (
++    <PageContainer
++      title="Teachers"
++      description="Manage teaching staff, subjects, and class allocations."
++      icon={BookOpen}
++    >
++      <div className="rounded-xl border bg-white p-8 text-center text-sm text-slate-500">
++        Teacher list and allocation tools will appear here.
++      </div>
++    </PageContainer>
++  );
++}
+diff --git a/src/app/institutions/page.tsx b/src/app/institutions/page.tsx
+new file mode 100644
+index 0000000..e5b66e5
+--- /dev/null
++++ b/src/app/institutions/page.tsx
+@@ -0,0 +1,80 @@
++"use client";
++
++import { Building2 } from "lucide-react";
++
++import { useInstitutions } from "@/features/institutions/hooks/useInstitutions";
++import { useSelectInstitution } from "@/features/institutions/hooks/useSelectInstitution";
++import InstitutionCard from "@/features/institutions/components/InstitutionCard";
++import { useLogout } from "@/features/auth/hooks/useLogout";
++import { useAppSelector } from "@/store/hooks";
++
++export default function InstitutionsPage() {
++  const { data: institutions, isLoading, isError } = useInstitutions();
++  const selectAndEnter = useSelectInstitution();
++  const logout = useLogout();
++  const user = useAppSelector((state) => state.auth.user);
++
++  return (
++    <main className="min-h-screen bg-slate-50">
++      <header className="h-14 bg-white border-b flex items-center justify-between px-6">
++        <div className="flex items-center gap-2 font-semibold text-slate-800">
++          <Building2 size={20} className="text-blue-900" />
++          School ERP
++        </div>
++
++        <div className="flex items-center gap-4">
++          {user && (
++            <span className="text-sm text-slate-500">{user.full_name}</span>
++          )}
++          <button onClick={logout} className="text-sm text-red-600">
++            Logout
++          </button>
++        </div>
++      </header>
++
++      <div className="mx-auto max-w-5xl px-6 py-10">
++        <h1 className="text-2xl font-semibold text-slate-800">
++          Select an institution
++        </h1>
++        <p className="mt-1 text-sm text-slate-500">
++          Choose the institution you want to manage.
++        </p>
++
++        {isLoading && (
++          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
++            {Array.from({ length: 3 }).map((_, i) => (
++              <div
++                key={i}
++                className="h-40 animate-pulse rounded-xl border bg-white"
++              />
++            ))}
++          </div>
++        )}
++
++        {isError && (
++          <div className="mt-8 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
++            Couldn&apos;t load institutions. Please try again.
++          </div>
++        )}
++
++        {!isLoading && !isError && institutions?.length === 0 && (
++          <div className="mt-8 rounded-xl border bg-white p-6 text-sm text-slate-500">
++            No institutions are linked to your account yet.
++          </div>
++        )}
++
++        {!isLoading && !isError && institutions && institutions.length > 0 && (
++          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
++            {institutions.map((institution) => (
++              <InstitutionCard
++                key={institution.id}
++                institution={institution}
++                onSelect={selectAndEnter}
++              />
++            ))}
++          </div>
++        )}
++      </div>
++    </main>
++  );
++}
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index a666624..888f5e9 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -1,65 +1,7 @@
+-// import Image from "next/image";
++import { redirect } from "next/navigation";
+ 
+-// export default function Home() {
+-//   return (
+-//     <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+-//       <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+-//         <Image
+-//           className="dark:invert"
+-//           src="/next.svg"
+-//           alt="Next.js logo"
+-//           width={100}
+-//           height={20}
+-//           priority
+-//         />
+-//         <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
+-//           <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
+-//             To get started, edit the page.tsx file.
+-//           </h1>
+-//           <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
+-//             Looking for a starting point or more instructions? Head over to{" "}
+-//             <a
+-//               href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+-//               className="font-medium text-zinc-950 dark:text-zinc-50"
+-//             >
+-//               Templates
+-//             </a>{" "}
+-//             or the{" "}
+-//             <a
+-//               href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+-//               className="font-medium text-zinc-950 dark:text-zinc-50"
+-//             >
+-//               Learning
+-//             </a>{" "}
+-//             center.
+-//           </p>
+-//         </div>
+-//         <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+-//           <a
+-//             className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
+-//             href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+-//             target="_blank"
+-//             rel="noopener noreferrer"
+-//           >
+-//             <Image
+-//               className="dark:invert"
+-//               src="/vercel.svg"
+-//               alt="Vercel logomark"
+-//               width={16}
+-//               height={16}
+-//             />
+-//             Deploy Now
+-//           </a>
+-//           <a
+-//             className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
+-//             href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+-//             target="_blank"
+-//             rel="noopener noreferrer"
+-//           >
+-//             Documentation
+-//           </a>
+-//         </div>
+-//       </main>
+-//     </div>
+-//   );
+-// }
++export default function RootPage() {
++  // Middleware handles the actual auth/institution-aware redirect;
++  // this is just a safe fallback if it's ever reached directly.
++  redirect("/dashboard");
++}
+diff --git a/src/components/layout/PageContainer.tsx b/src/components/layout/PageContainer.tsx
+index e69de29..6b23c47 100644
+--- a/src/components/layout/PageContainer.tsx
++++ b/src/components/layout/PageContainer.tsx
+@@ -0,0 +1,40 @@
++import type { LucideIcon } from "lucide-react";
++
++export default function PageContainer({
++  title,
++  description,
++  icon: Icon,
++  action,
++  children,
++}: {
++  title: string;
++  description?: string;
++  icon?: LucideIcon;
++  action?: React.ReactNode;
++  children?: React.ReactNode;
++}) {
++  return (
++    <div className="space-y-6">
++      <div className="flex items-center justify-between">
++        <div className="flex items-center gap-3">
++          {Icon && (
++            <div className="flex size-10 items-center justify-center rounded-lg bg-blue-900/10 text-blue-900">
++              <Icon size={20} />
++            </div>
++          )}
++
++          <div>
++            <h1 className="text-2xl font-semibold text-slate-800">{title}</h1>
++            {description && (
++              <p className="text-sm text-slate-500">{description}</p>
++            )}
++          </div>
++        </div>
++
++        {action}
++      </div>
++
++      {children}
++    </div>
++  );
++}
+diff --git a/src/components/layout/Sidebar.tsx b/src/components/layout/Sidebar.tsx
+index d6cd0be..b3e7230 100644
+--- a/src/components/layout/Sidebar.tsx
++++ b/src/components/layout/Sidebar.tsx
+@@ -1,15 +1,20 @@
+ "use client";
+ 
+ import Link from "next/link";
+-import { usePathname } from "next/navigation";
++import { usePathname, useRouter } from "next/navigation";
+ 
+ import {
+   LayoutDashboard,
+-  Users,
++  GraduationCap,
+   BookOpen,
+-  CreditCard,
++  Users,
++  UserCog,
++  Receipt,
++  Building2,
+ } from "lucide-react";
+ 
++import { useAppSelector } from "@/store/hooks";
++
+ const menu = [
+   {
+     name: "Dashboard",
+@@ -19,7 +24,7 @@ const menu = [
+   {
+     name: "Students",
+     href: "/students",
+-    icon: Users,
++    icon: GraduationCap,
+   },
+   {
+     name: "Teachers",
+@@ -27,9 +32,19 @@ const menu = [
+     icon: BookOpen,
+   },
+   {
+-    name: "Accounting",
+-    href: "/accounting",
+-    icon: CreditCard,
++    name: "Members",
++    href: "/members",
++    icon: Users,
++  },
++  {
++    name: "Staffs",
++    href: "/staffs",
++    icon: UserCog,
++  },
++  {
++    name: "Invoice & Billing",
++    href: "/invoices",
++    icon: Receipt,
+   },
+ ];
+ 
+@@ -40,6 +55,11 @@ export default function Sidebar({
+   setCollapsed: (v: boolean) => void;
+ }) {
+   const pathname = usePathname();
++  const router = useRouter();
++
++  const selectedInstitution = useAppSelector(
++    (state) => state.institution.selectedInstitution
++  );
+ 
+   return (
+     <aside
+@@ -51,6 +71,26 @@ export default function Sidebar({
+         {collapsed ? "ERP" : "School ERP"}
+       </div>
+ 
++      {/* Current institution / switcher */}
++      <button
++        onClick={() => router.push("/institutions")}
++        className="flex w-full items-center gap-3 px-4 py-3 border-b text-left hover:bg-slate-50 transition"
++        title="Switch institution"
++      >
++        <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-900/10 text-blue-900">
++          <Building2 size={16} />
++        </div>
++
++        {!collapsed && (
++          <div className="min-w-0">
++            <p className="truncate text-sm font-medium text-slate-800">
++              {selectedInstitution?.name ?? "Select institution"}
++            </p>
++            <p className="truncate text-xs text-slate-400">Switch</p>
++          </div>
++        )}
++      </button>
++
+       <nav className="p-2 space-y-1">
+         {menu.map((item) => {
+           const active = pathname === item.href;
+@@ -74,4 +114,4 @@ export default function Sidebar({
+       </nav>
+     </aside>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/auth/hooks/useLogin.ts b/src/features/auth/hooks/useLogin.ts
+index fd2bb71..7fd599f 100644
+--- a/src/features/auth/hooks/useLogin.ts
++++ b/src/features/auth/hooks/useLogin.ts
+@@ -30,7 +30,7 @@ export function useLogin() {
+ 
+         toast.success("Welcome back!");
+ 
+-        router.replace("/dashboard");
++        router.replace("/institutions");
+ 
+     },
+ 
+diff --git a/src/features/auth/hooks/useLogout.ts b/src/features/auth/hooks/useLogout.ts
+index 43a5d86..b7cb8d4 100644
+--- a/src/features/auth/hooks/useLogout.ts
++++ b/src/features/auth/hooks/useLogout.ts
+@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
+ import { useAppDispatch } from "@/store/hooks";
+ 
+ import { logout } from "@/store/slices/authSlice";
++import { clearSelectedInstitution } from "@/store/slices/institutionSlice";
+ 
+-import { tokenStorage } from "@/lib/cookies";
++import { tokenStorage, institutionStorage } from "@/lib/cookies";
+ 
+ export function useLogout() {
+ 
+@@ -17,8 +18,10 @@ export function useLogout() {
+     return () => {
+ 
+         tokenStorage.clear();
++        institutionStorage.clear();
+ 
+         dispatch(logout());
++        dispatch(clearSelectedInstitution());
+ 
+         router.replace("/login");
+ 
+diff --git a/src/features/institutions/api/institution.api.ts b/src/features/institutions/api/institution.api.ts
+new file mode 100644
+index 0000000..28093cd
+--- /dev/null
++++ b/src/features/institutions/api/institution.api.ts
+@@ -0,0 +1,14 @@
++import api from "@/services/api";
++import type { Institution } from "../types/institution";
++
++export const getInstitutions = async (): Promise<Institution[]> => {
++  const response = await api.get("/institutions");
++  return response.data;
++};
++
++export const getInstitutionById = async (
++  id: number | string
++): Promise<Institution> => {
++  const response = await api.get(`/institutions/${id}`);
++  return response.data;
++};
+diff --git a/src/features/institutions/components/InstitutionCard.tsx b/src/features/institutions/components/InstitutionCard.tsx
+new file mode 100644
+index 0000000..4dfb20d
+--- /dev/null
++++ b/src/features/institutions/components/InstitutionCard.tsx
+@@ -0,0 +1,64 @@
++"use client";
++
++import { Building2, Users, GraduationCap, ChevronRight } from "lucide-react";
++
++import {
++  Card,
++  CardHeader,
++  CardTitle,
++  CardDescription,
++  CardContent,
++  CardFooter,
++} from "@/components/ui/card";
++
++import type { Institution } from "../types/institution";
++
++export default function InstitutionCard({
++  institution,
++  onSelect,
++}: {
++  institution: Institution;
++  onSelect: (institution: Institution) => void;
++}) {
++  return (
++    <Card
++      onClick={() => onSelect(institution)}
++      className="cursor-pointer transition hover:shadow-md hover:ring-blue-900/30 hover:-translate-y-0.5"
++    >
++      <CardHeader>
++        <div className="flex items-start gap-3">
++          <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-blue-900/10 text-blue-900">
++            <Building2 size={22} />
++          </div>
++
++          <div className="min-w-0">
++            <CardTitle className="truncate">{institution.name}</CardTitle>
++            <CardDescription className="truncate">
++              {institution.code}
++              {institution.type ? ` · ${institution.type}` : ""}
++            </CardDescription>
++          </div>
++        </div>
++      </CardHeader>
++
++      <CardContent>
++        <div className="flex items-center gap-4 text-sm text-slate-500">
++          <span className="flex items-center gap-1.5">
++            <GraduationCap size={16} />
++            {institution.students_count ?? 0} Students
++          </span>
++
++          <span className="flex items-center gap-1.5">
++            <Users size={16} />
++            {institution.teachers_count ?? 0} Teachers
++          </span>
++        </div>
++      </CardContent>
++
++      <CardFooter className="justify-between bg-transparent border-t-0 p-0 px-(--card-spacing)">
++        <span className="text-sm font-medium text-blue-900">Enter dashboard</span>
++        <ChevronRight size={16} className="text-blue-900" />
++      </CardFooter>
++    </Card>
++  );
++}
+diff --git a/src/features/institutions/components/InstitutionGuard.tsx b/src/features/institutions/components/InstitutionGuard.tsx
+new file mode 100644
+index 0000000..f55358c
+--- /dev/null
++++ b/src/features/institutions/components/InstitutionGuard.tsx
+@@ -0,0 +1,67 @@
++"use client";
++
++import { useEffect, useState } from "react";
++import { useRouter } from "next/navigation";
++
++import { useAppDispatch, useAppSelector } from "@/store/hooks";
++import { selectInstitution } from "@/store/slices/institutionSlice";
++import { institutionStorage } from "@/lib/cookies";
++import { getInstitutionById } from "../api/institution.api";
++
++/**
++ * Ensures a selected institution exists in Redux state for anything
++ * rendered under the dashboard layout. Falls back to re-fetching the
++ * institution from the cookie-stored id on a hard refresh, and sends
++ * the user back to /institutions if nothing is selected.
++ */
++export default function InstitutionGuard({
++  children,
++}: {
++  children: React.ReactNode;
++}) {
++  const dispatch = useAppDispatch();
++  const router = useRouter();
++
++  const selectedInstitution = useAppSelector(
++    (state) => state.institution.selectedInstitution
++  );
++
++  const [status, setStatus] = useState<"pending" | "ready">("pending");
++
++  useEffect(() => {
++    if (selectedInstitution) {
++      return;
++    }
++
++    const institutionId = institutionStorage.get();
++
++    if (!institutionId) {
++      router.replace("/institutions");
++      return;
++    }
++
++    getInstitutionById(institutionId)
++      .then((institution) => {
++        dispatch(selectInstitution(institution));
++      })
++      .catch(() => {
++        institutionStorage.clear();
++        router.replace("/institutions");
++      })
++      .finally(() => {
++        setStatus("ready");
++      });
++  }, [selectedInstitution, dispatch, router]);
++
++  const ready = Boolean(selectedInstitution) || status === "ready";
++
++  if (!ready) {
++    return (
++      <div className="flex h-screen items-center justify-center">
++        <p className="text-slate-500">Loading institution...</p>
++      </div>
++    );
++  }
++
++  return <>{children}</>;
++}
+diff --git a/src/features/institutions/hooks/useInstitutions.ts b/src/features/institutions/hooks/useInstitutions.ts
+new file mode 100644
+index 0000000..47a9c46
+--- /dev/null
++++ b/src/features/institutions/hooks/useInstitutions.ts
+@@ -0,0 +1,12 @@
++"use client";
++
++import { useQuery } from "@tanstack/react-query";
++import { getInstitutions } from "../api/institution.api";
++
++export function useInstitutions() {
++  return useQuery({
++    queryKey: ["institutions"],
++    queryFn: getInstitutions,
++    staleTime: 5 * 60 * 1000,
++  });
++}
+diff --git a/src/features/institutions/hooks/useSelectInstitution.ts b/src/features/institutions/hooks/useSelectInstitution.ts
+new file mode 100644
+index 0000000..6eb0aab
+--- /dev/null
++++ b/src/features/institutions/hooks/useSelectInstitution.ts
+@@ -0,0 +1,20 @@
++"use client";
++
++import { useRouter } from "next/navigation";
++
++import { selectInstitution } from "@/store/slices/institutionSlice";
++import { useAppDispatch } from "@/store/hooks";
++
++import { institutionStorage } from "@/lib/cookies";
++import type { Institution } from "../types/institution";
++
++export function useSelectInstitution() {
++  const dispatch = useAppDispatch();
++  const router = useRouter();
++
++  return function selectAndEnter(institution: Institution) {
++    institutionStorage.set(institution.id);
++    dispatch(selectInstitution(institution));
++    router.push("/dashboard");
++  };
++}
+diff --git a/src/features/institutions/types/institution.ts b/src/features/institutions/types/institution.ts
+new file mode 100644
+index 0000000..4efef8d
+--- /dev/null
++++ b/src/features/institutions/types/institution.ts
+@@ -0,0 +1,16 @@
++export interface Institution {
++  id: number;
++  name: string;
++  code: string;
++  logo_url?: string | null;
++  address?: string | null;
++  type?: string | null;
++  students_count?: number;
++  teachers_count?: number;
++}
++
++export interface InstitutionState {
++  institutions: Institution[];
++  selectedInstitution: Institution | null;
++  loading: boolean;
++}
+diff --git a/src/lib/cookies.ts b/src/lib/cookies.ts
+index d650704..7b3ec02 100644
+--- a/src/lib/cookies.ts
++++ b/src/lib/cookies.ts
+@@ -2,6 +2,7 @@ import Cookies from "js-cookie";
+ 
+ const ACCESS_TOKEN = "access_token";
+ const REFRESH_TOKEN = "refresh_token";
++const SELECTED_INSTITUTION = "selected_institution_id";
+ 
+ export const tokenStorage = {
+   set(access: string, refresh: string) {
+@@ -42,4 +43,21 @@ export const tokenStorage = {
+   getRefreshToken() {
+     return Cookies.get(REFRESH_TOKEN);
+   },
++};
++
++export const institutionStorage = {
++  set(institutionId: number | string) {
++    Cookies.set(SELECTED_INSTITUTION, String(institutionId), {
++      expires: 1,
++      sameSite: "Strict",
++    });
++  },
++
++  get() {
++    return Cookies.get(SELECTED_INSTITUTION);
++  },
++
++  clear() {
++    Cookies.remove(SELECTED_INSTITUTION);
++  },
+ };
+\ No newline at end of file
+diff --git a/src/store/index.ts b/src/store/index.ts
+index f0e99d6..f81ceae 100644
+--- a/src/store/index.ts
++++ b/src/store/index.ts
+@@ -1,9 +1,11 @@
+ import { configureStore } from "@reduxjs/toolkit";
+ import authReducer from "./slices/authSlice";
++import institutionReducer from "./slices/institutionSlice";
+ 
+ export const store = configureStore({
+   reducer: {
+     auth: authReducer,
++    institution: institutionReducer,
+   },
+ });
+ 
+diff --git a/src/store/slices/institutionSlice.ts b/src/store/slices/institutionSlice.ts
+index e69de29..30a516d 100644
+--- a/src/store/slices/institutionSlice.ts
++++ b/src/store/slices/institutionSlice.ts
+@@ -0,0 +1,41 @@
++import { createSlice, PayloadAction } from "@reduxjs/toolkit";
++import type { Institution, InstitutionState } from "@/features/institutions/types/institution";
++
++const initialState: InstitutionState = {
++  institutions: [],
++  selectedInstitution: null,
++  loading: false,
++};
++
++const institutionSlice = createSlice({
++  name: "institution",
++
++  initialState,
++
++  reducers: {
++    setInstitutions(state, action: PayloadAction<Institution[]>) {
++      state.institutions = action.payload;
++    },
++
++    selectInstitution(state, action: PayloadAction<Institution>) {
++      state.selectedInstitution = action.payload;
++    },
++
++    clearSelectedInstitution(state) {
++      state.selectedInstitution = null;
++    },
++
++    setInstitutionLoading(state, action: PayloadAction<boolean>) {
++      state.loading = action.payload;
++    },
++  },
++});
++
++export const {
++  setInstitutions,
++  selectInstitution,
++  clearSelectedInstitution,
++  setInstitutionLoading,
++} = institutionSlice.actions;
++
++export default institutionSlice.reducer;

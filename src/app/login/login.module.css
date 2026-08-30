@@ -1,0 +1,215 @@
+.page {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+}
+
+/* ── Left brand panel ── */
+.brand {
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.brand::before {
+  content: '';
+  position: absolute;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37,99,235,.25) 0%, transparent 70%);
+  top: -100px; right: -100px;
+}
+
+.brandInner { max-width: 400px; position: relative; z-index: 1; }
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: 3rem;
+}
+
+.logoMark {
+  width: 44px; height: 44px;
+  background: var(--blue);
+  color: white;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-head);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.logoText {
+  font-family: var(--font-head);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+}
+
+.brandHeading {
+  font-family: var(--font-head);
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  line-height: 1.25;
+  margin-bottom: 2.5rem;
+}
+
+.featureList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: .875rem;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  color: rgba(255,255,255,.7);
+  font-size: .95rem;
+}
+
+.featureDot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--blue);
+  flex-shrink: 0;
+}
+
+/* ── Right form panel ── */
+.formPanel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--white);
+}
+
+.formCard {
+  width: 100%;
+  max-width: 400px;
+}
+
+.formHeader { margin-bottom: 2rem; }
+
+.formTitle {
+  font-family: var(--font-head);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: .375rem;
+}
+
+.formSub {
+  color: var(--slate);
+  font-size: .925rem;
+}
+
+.form { display: flex; flex-direction: column; gap: 1.25rem; }
+
+.field { display: flex; flex-direction: column; gap: .4rem; }
+
+.label {
+  font-size: .85rem;
+  font-weight: 500;
+  color: var(--navy);
+}
+
+.input {
+  padding: .7rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: .95rem;
+  color: var(--navy);
+  background: var(--white);
+  transition: border-color .15s, box-shadow .15s;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+
+.input::placeholder { color: #adb5bd; }
+
+.errorBox {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius);
+  padding: .75rem 1rem;
+  color: var(--danger);
+  font-size: .9rem;
+}
+
+.errorIcon {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: white;
+  display: grid;
+  place-items: center;
+  font-size: .7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.submitBtn {
+  padding: .8rem 1.5rem;
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background .15s, transform .1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin-top: .25rem;
+}
+
+.submitBtn:hover:not(:disabled) { background: #1d4ed8; }
+.submitBtn:active:not(:disabled) { transform: scale(.98); }
+.submitBtn:disabled { opacity: .65; cursor: not-allowed; }
+
+.spinner {
+  width: 18px; height: 18px;
+  border: 2.5px solid rgba(255,255,255,.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.footer {
+  text-align: center;
+  margin-top: 2rem;
+  color: var(--slate);
+  font-size: .8rem;
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .page { grid-template-columns: 1fr; }
+  .brand { display: none; }
+  .formPanel { background: var(--slate-lt); }
+  .formCard {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+  }
+}

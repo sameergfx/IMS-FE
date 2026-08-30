@@ -1,0 +1,29 @@
+.page { max-width: auto; }
+.header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; }
+.title { font-family: var(--font-head); font-size: 1.6rem; font-weight: 700; color: var(--navy); }
+.sub { color: var(--slate); font-size: .875rem; margin-top: .2rem; }
+.createBtn { background: var(--blue); color: white; padding: .6rem 1.25rem; border-radius: var(--radius); font-size: .9rem; font-weight: 600; transition: background .15s; white-space: nowrap; }
+.createBtn:hover { background: #1d4ed8; }
+.toolbar { margin-bottom: 1.25rem; }
+.search { width: 100%; max-width: 400px; padding: .6rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: .9rem; outline: none; }
+.search:focus { border-color: var(--blue); }
+.tableWrap { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+.table thead tr { background: var(--slate-lt); border-bottom: 1.5px solid var(--border); }
+.table th { padding: .75rem 1rem; text-align: left; font-size: .78rem; font-weight: 600; color: var(--slate); text-transform: uppercase; letter-spacing: .04em; }
+.table td { padding: .875rem 1rem; border-bottom: 1px solid var(--border); color: var(--navy); vertical-align: middle; }
+.table tbody tr:last-child td { border-bottom: none; }
+.table tbody tr:hover { background: #fafbfc; }
+.receiptNo { font-family: var(--font-head); font-weight: 600; font-size: .85rem; color: var(--blue); }
+.desc { max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--slate); }
+.payBadge { background: var(--slate-lt); color: var(--slate); padding: .2rem .6rem; border-radius: 999px; font-size: .78rem; text-transform: capitalize; }
+.amount { font-weight: 600; font-family: var(--font-head); }
+.status { padding: .2rem .65rem; border-radius: 999px; font-size: .78rem; font-weight: 600; text-transform: capitalize; }
+.statusActive { background: #dcfce7; color: var(--success); }
+.statusCancelled { background: #fee2e2; color: var(--danger); }
+.viewBtn { color: var(--blue); font-size: .85rem; font-weight: 500; }
+.viewBtn:hover { text-decoration: underline; }
+.state { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 3rem; text-align: center; color: var(--slate); display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+
+.invLink { color: var(--blue); font-weight: 500; font-size: .85rem; }
+.invLink:hover { text-decoration: underline; }

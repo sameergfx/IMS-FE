@@ -1,0 +1,99 @@
+/* ── Compact (table rows) ──────────────────────────────── */
+.compact {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+}
+
+.refFirst {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: .82rem;
+  color: var(--blue);
+  letter-spacing: .02em;
+}
+
+.nameSecond {
+  font-size: .82rem;
+  color: var(--navy);
+  font-weight: 500;
+}
+
+.nameOnly {
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+/* ── Full card (detail pages) ──────────────────────────── */
+.card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .875rem 1rem;
+  background: var(--slate-lt);
+  border-radius: 10px;
+}
+
+.avatar {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--navy); color: white;
+  font-family: var(--font-head);
+  font-size: .85rem; font-weight: 700;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+
+.info { flex: 1; }
+
+.refChip {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  margin-bottom: .35rem;
+}
+
+.refLabel {
+  font-size: .72rem;
+  color: var(--slate);
+  font-weight: 500;
+}
+
+.refValue {
+  font-size: .8rem;
+  font-weight: 700;
+  color: var(--blue);
+  background: var(--blue-lt);
+  padding: .1rem .55rem;
+  border-radius: 4px;
+  letter-spacing: .03em;
+}
+
+.fullName {
+  font-weight: 700;
+  font-size: .95rem;
+  color: var(--navy);
+}
+
+.email {
+  font-size: .8rem;
+  color: var(--slate);
+  margin-top: .1rem;
+}
+
+.typeBadge {
+  display: inline-block;
+  margin-top: .4rem;
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: white;
+  color: var(--slate);
+  padding: .15rem .55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.loading { font-size: .82rem; color: var(--slate); }
+.fallback { font-size: .82rem; color: var(--slate); font-style: italic; }

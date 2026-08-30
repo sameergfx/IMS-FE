@@ -1,0 +1,77 @@
+.page { max-width: 860px; }
+.state { padding: 3rem; text-align: center; color: var(--slate); }
+
+.header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap; }
+.backBtn { background: none; border: none; color: var(--slate); font-size: .85rem; cursor: pointer; padding: 0; display: block; margin-bottom: .5rem; }
+.title { font-family: var(--font-head); font-size: 1.5rem; font-weight: 700; color: var(--navy); margin-bottom: .4rem; }
+
+.status { padding: .25rem .75rem; border-radius: 999px; font-size: .8rem; font-weight: 600; text-transform: capitalize; }
+.statusPaid { background: #dcfce7; color: var(--success); }
+.statusPartial { background: #fef3c7; color: #b45309; }
+.statusUnpaid { background: #fee2e2; color: var(--danger); }
+.statusCancelled { background: #f1f5f9; color: var(--slate); }
+
+.headerActions { display: flex; gap: .75rem; flex-wrap: wrap; }
+.partialBtn { background: white; border: 1.5px solid var(--blue); color: var(--blue); padding: .55rem 1.1rem; border-radius: var(--radius); font-size: .85rem; font-weight: 600; cursor: pointer; }
+.payBtn { background: var(--blue); border: none; color: white; padding: .55rem 1.1rem; border-radius: var(--radius); font-size: .85rem; font-weight: 600; cursor: pointer; }
+.payBtn:hover { background: #1d4ed8; }
+
+.card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 2rem; margin-bottom: 1.5rem; }
+.cardTitle { font-family: var(--font-head); font-size: 1rem; font-weight: 600; color: var(--navy); margin-bottom: 1.25rem; padding-bottom: .75rem; border-bottom: 1px solid var(--border); }
+
+.partySection { margin-bottom: 1.25rem; }
+.partyLabel { font-size: .78rem; color: var(--slate); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .4rem; }
+
+.metaGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; padding-bottom: 1.5rem; border-bottom: 1.5px solid var(--border); margin-bottom: 1.5rem; }
+.metaItem { display: flex; flex-direction: column; gap: .25rem; }
+.metaLabel { font-size: .78rem; color: var(--slate); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
+.metaValue { font-size: .95rem; font-weight: 600; color: var(--navy); }
+
+.table { width: 100%; border-collapse: collapse; font-size: .9rem; margin-bottom: 1.5rem; }
+.table th { text-align: left; padding: .6rem .75rem; font-size: .78rem; font-weight: 600; color: var(--slate); text-transform: uppercase; letter-spacing: .04em; background: var(--slate-lt); border-bottom: 1.5px solid var(--border); }
+.table td { padding: .875rem .75rem; border-bottom: 1px solid var(--border); color: var(--navy); }
+.table tbody tr:last-child td { border-bottom: none; }
+.net { font-weight: 600; }
+
+.totals { max-width: 320px; margin-left: auto; display: flex; flex-direction: column; gap: .55rem; }
+.totalRow { display: flex; justify-content: space-between; font-size: .9rem; color: var(--slate); }
+.bold { font-weight: 600; color: var(--navy); padding-top: .5rem; border-top: 1px solid var(--border); }
+.greenRow { color: var(--success); font-weight: 500; }
+.grandTotal { font-family: var(--font-head); font-size: 1.15rem; font-weight: 700; color: var(--navy); padding-top: .6rem; border-top: 2px solid var(--border); }
+
+.noReceipts { color: var(--slate); font-size: .9rem; text-align: center; padding: 1.5rem 0; }
+
+.receiptsList { display: flex; flex-direction: column; gap: .6rem; }
+.receiptRow { display: flex; align-items: center; justify-content: space-between; padding: .75rem .9rem; background: var(--slate-lt); border-radius: 8px; }
+.receiptNo { font-family: var(--font-head); font-weight: 600; font-size: .85rem; color: var(--navy); }
+.receiptMeta { font-size: .78rem; color: var(--slate); margin-top: .15rem; text-transform: capitalize; }
+.receiptRight { display: flex; align-items: center; gap: .75rem; }
+.receiptAmount { font-weight: 700; font-family: var(--font-head); color: var(--navy); }
+.receiptStatus { font-size: .7rem; padding: .15rem .55rem; border-radius: 999px; font-weight: 600; text-transform: capitalize; }
+.active { background: #dcfce7; color: var(--success); }
+.cancelled { background: #fee2e2; color: var(--danger); }
+
+/* Modal */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: grid; place-items: center; z-index: 100; padding: 1rem; }
+.modal { background: white; border-radius: 14px; width: 100%; max-width: 460px; padding: 1.75rem; box-shadow: var(--shadow-lg); }
+.modalTitle { font-family: var(--font-head); font-size: 1.1rem; font-weight: 700; color: var(--navy); }
+.modalSub { font-size: .875rem; color: var(--slate); margin-top: .25rem; margin-bottom: 1.25rem; }
+
+.modalForm { display: flex; flex-direction: column; gap: 1rem; }
+.field { display: flex; flex-direction: column; gap: .4rem; }
+.label { font-size: .85rem; font-weight: 500; color: var(--navy); }
+.input { padding: .6rem .875rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; outline: none; }
+.input:focus { border-color: var(--blue); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: .875rem; }
+
+.error { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: .65rem .875rem; color: var(--danger); font-size: .85rem; }
+
+.modalActions { display: flex; justify-content: flex-end; gap: .75rem; margin-top: .25rem; }
+.modalCancel { background: none; border: 1.5px solid var(--border); color: var(--slate); padding: .6rem 1.25rem; border-radius: 8px; cursor: pointer; font-size: .9rem; }
+.modalConfirm { background: var(--blue); border: none; color: white; padding: .6rem 1.25rem; border-radius: 8px; cursor: pointer; font-size: .9rem; font-weight: 600; }
+.modalConfirm:disabled { opacity: .6; cursor: not-allowed; }
+
+@media (max-width: 600px) {
+  .metaGrid { grid-template-columns: 1fr 1fr; }
+  .grid2 { grid-template-columns: 1fr; }
+}

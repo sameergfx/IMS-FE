@@ -1,0 +1,34 @@
+.page { max-width: 700px; }
+
+.state { padding: 3rem; text-align: center; color: var(--slate); }
+
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap; }
+.backBtn { background: none; border: none; color: var(--slate); font-size: .85rem; cursor: pointer; padding: 0; display: block; }
+.title { font-family: var(--font-head); font-size: 1.6rem; font-weight: 700; color: var(--navy); flex: 1; }
+.actions { display: flex; gap: .75rem; }
+.editLink { background: var(--blue); color: white; border: none; padding: .6rem 1.25rem; border-radius: var(--radius); font-size: .9rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
+.editLink:hover { background: #1d4ed8; }
+
+.card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.75rem; margin-bottom: 1.25rem; }
+
+.cardTitle { font-family: var(--font-head); font-size: 1.05rem; font-weight: 600; color: var(--navy); margin-bottom: 1.25rem; padding-bottom: .75rem; border-bottom: 1.5px solid var(--border); }
+
+.partySection { margin-bottom: 1.5rem; }
+
+.infoGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+.infoItem { display: flex; flex-direction: column; gap: .4rem; }
+.infoLabel { font-size: .78rem; font-weight: 500; color: var(--slate); text-transform: uppercase; letter-spacing: .04em; }
+.infoValue { font-size: .95rem; font-weight: 600; color: var(--navy); }
+
+.badge { display: inline-block; padding: .2rem .6rem; background: var(--blue-lt); color: var(--blue); border-radius: 4px; font-size: .8rem; font-weight: 600; text-transform: capitalize; }
+
+.statusBadge { display: inline-block; padding: .2rem .6rem; border-radius: 4px; font-size: .78rem; font-weight: 600; }
+.active { background: #dcfce7; color: var(--success); }
+.inactive { background: #fee2e2; color: var(--danger); }
+
+.error { background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius); padding: .875rem 1rem; color: var(--danger); font-size: .9rem; }
+
+@media (max-width: 600px) {
+  .infoGrid { grid-template-columns: 1fr; }
+}
