@@ -118,11 +118,13 @@ export default function InvoiceDetailPage() {
         </div>
 
         <table className={styles.table}>
-          <thead><tr><th>#</th><th>Description</th><th>Amount</th><th>Discount</th><th>Net</th></tr></thead>
+          <thead><tr><th>#</th><th>Category</th><th>Description</th><th>Amount</th><th>Discount</th><th>Net</th></tr></thead>
           <tbody>
             {invoice.items.map((item, i) => (
               <tr key={item.id}>
-                <td>{i + 1}</td><td>{item.description}</td>
+                <td>{i + 1}</td>
+                <td>{item.category_name}</td>
+                <td>{item.description}</td>
                 <td>₹{Number(item.amount).toLocaleString()}</td>
                 <td>{Number(item.discount) > 0 ? `₹${Number(item.discount).toLocaleString()}` : "—"}</td>
                 <td className={styles.net}>₹{Number(item.net_amount).toLocaleString()}</td>

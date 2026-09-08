@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { usersApi, accountingApi } from "@/lib/api"
 import { UserResponse } from "@/types"
-import { Account, InvoiceItemCreate } from "@/types/accounting"
+import { Account, InvoiceCategory, InvoiceItemCreate } from "@/types/accounting"
 import styles from "./create.module.css"
 
-const emptyItem = (): InvoiceItemCreate => ({ account_id: 0, description: "", amount: 0, discount: 0 })
+const emptyItem = (): InvoiceItemCreate => ({ account_id: 0, category_name: "", category_id: 0, description: "", amount: 0, discount: 0 })
 
 export default function CreateInvoicePage() {
   const { id } = useParams()
@@ -15,7 +15,7 @@ export default function CreateInvoicePage() {
   const pickerRef = useRef<HTMLDivElement>(null)
 
   const [users,      setUsers]      = useState<UserResponse[]>([])
-  const [accounts,   setAccounts]   = useState<Account[]>([])
+  const [categories, setCategories] = useState<InvoiceCategory[]>([])
   const [loadError,  setLoadError]  = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error,      setError]      = useState("")
@@ -24,6 +24,14 @@ export default function CreateInvoicePage() {
 
   const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null)
   const [items, setItems] = useState<InvoiceItemCreate[]>([emptyItem()])
+
+    // New-category popup
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [creatingCategory, setCreatingCategory]   = useState(false)
+  const [categoryError,    setCategoryError]      = useState("")
+  const [newCategory, setNewCategory] = useState({
+    name: "", created_by: selectedUser?.id || 0,
+  })
 
   const [form, setForm] = useState({
     invoice_date:  new Date().toISOString().split("T")[0],
@@ -39,9 +47,9 @@ export default function CreateInvoicePage() {
       .then(data => setUsers(data))
       .catch(err => setLoadError(prev => prev + ` Users: ${err.message}.`))
 
-    accountingApi.getAccounts()
-      .then(data => setAccounts(data))
-      .catch(err => setLoadError(prev => prev + ` Payment types: ${err.message}.`))
+    accountingApi.getInvoiceCategories()
+      .then(data => setCategories(data))
+      .catch(err => setLoadError(prev => prev + ` Invoice categories: ${err.message}.`))
   }, [id])
 
   // Close user dropdown when clicking outside it
@@ -67,12 +75,36 @@ export default function CreateInvoicePage() {
   const subtotal    = items.reduce((s, it) => s + (Number(it.amount) - Number(it.discount)), 0)
   const totalAmount = subtotal - Number(form.discount)
 
+    const openCategoryModal = () => {
+    setCategoryError("")
+    setNewCategory({ name: "", created_by: selectedUser?.id || 0 })
+    setShowCategoryModal(true)
+  }
+
+  const handleCreateCategory = async () => {
+    setCategoryError("")
+    if (!newCategory.name.trim()) { setCategoryError("Category name is required"); return }
+
+    setCreatingCategory(true)
+    try {
+      const account = await accountingApi.createInvoiceCategory({
+        name:         newCategory.name.trim(), created_by: selectedUser?.id || 0,
+      })
+      setCategories(prev => [...prev, account])
+      setShowCategoryModal(false)
+    } catch (err: any) {
+      setCategoryError(err.message || "Failed to create category")
+    } finally {
+      setCreatingCategory(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
     if (!selectedUser) { setError("Please select a user"); return }
-    if (items.some(it => !it.account_id || !it.description || !it.amount)) {
+    if (items.some(it => !it.category_id || !it.description || !it.amount)) {
       setError("Fill all item fields, including payment type"); return
     }
 
@@ -88,7 +120,8 @@ export default function CreateInvoicePage() {
         academic_year: form.academic_year || null,
         issued_by:     null,
         items: items.map(it => ({
-          account_id:  Number(it.account_id),
+          category_id: Number(it.category_id),
+          category_name: categories.find(c => c.id === Number(it.category_id))?.name || "",
           description: it.description,
           amount:      Number(it.amount),
           discount:    Number(it.discount),
@@ -119,7 +152,7 @@ export default function CreateInvoicePage() {
         </div>
       )}
 
-      {accounts.length === 0 && !loadError && (
+      {categories.length === 0 && !loadError && (
         <div className={styles.loadError}>
           ⚠ No payment types found. Go to <strong>Accounts → Add Account</strong> first (e.g. Tuition Fee, Bus Fee, Donation) before creating an invoice.
         </div>
@@ -220,24 +253,31 @@ export default function CreateInvoicePage() {
         <div className={styles.card}>
           <div className={styles.itemsHeader}>
             <h2 className={styles.cardTitle}>Payment Items</h2>
+            <div>
+              <button type="button" className={styles.newCategoryBtn} onClick={openCategoryModal}>
+              + New Category
+            </button>
+            <span> </span>
             <button type="button" className={styles.addItemBtn} onClick={() => setItems(p => [...p, emptyItem()])}>
               + Add Item
             </button>
+            </div>
+            
           </div>
 
           <div className={styles.itemsHead}>
-            <span>Type</span><span>Description</span><span>Amount (₹)</span><span>Discount (₹)</span><span>Net (₹)</span><span></span>
+            <span>Category</span><span>Description</span><span>Amount (₹)</span><span>Discount (₹)</span><span>Net (₹)</span><span></span>
           </div>
 
           {items.map((item, i) => (
             <div key={i} className={styles.itemRow}>
               <select
                 className={styles.input}
-                value={item.account_id}
-                onChange={e => setItem(i, "account_id", Number(e.target.value))}
+                value={item.category_id}
+                onChange={e => setItem(i, "category_id", Number(e.target.value))}
               >
-                <option value={0}>Select type</option>
-                {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                <option value={0}>Select Category</option>
+                {categories.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
               <input className={styles.input} placeholder="Description"
                 value={item.description} onChange={e => setItem(i, "description", e.target.value)} />
@@ -284,6 +324,37 @@ export default function CreateInvoicePage() {
           </button>
         </div>
       </form>
+
+      {showCategoryModal && (
+        <div className={styles.modalOverlay} onClick={() => !creatingCategory && setShowCategoryModal(false)}>
+          <div className={styles.modalBox} onClick={e => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>New Category</h3>
+            <p className={styles.modalSub}>Create a payment type (e.g. Tuition Fee, Bus Fee) without leaving this page.</p>
+
+            <div className={styles.modalField}>
+              <label className={styles.label}>Name *</label>
+              <input
+                className={styles.input}
+                placeholder="e.g. Tuition Fee"
+                value={newCategory.name}
+                onChange={e => setNewCategory(c => ({ ...c, name: e.target.value }))}
+                autoFocus
+              />
+            </div>
+
+            {categoryError && <div className={styles.error}>{categoryError}</div>}
+
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.cancelBtn} onClick={() => setShowCategoryModal(false)} disabled={creatingCategory}>
+                Cancel
+              </button>
+              <button type="button" className={styles.submitBtn} onClick={handleCreateCategory} disabled={creatingCategory}>
+                {creatingCategory ? "Creating..." : "Create Category"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

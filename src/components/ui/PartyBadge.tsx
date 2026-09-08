@@ -22,8 +22,8 @@ export default function PartyBadge({ userId, compact = false }: Props) {
         {/* Show "ADM001 - John Smith" or just "John Smith" if no ref */}
         {refNumber ? (
           <>
-            <span className={styles.refFirst}>{refNumber}</span>
-            <span className={styles.nameSecond}>{user.full_name}</span>
+            <span className={styles.refFirst}>{user.full_name}</span>
+            <span className={styles.nameSecond}>{refNumber}</span>
           </>
         ) : (
           <span className={styles.nameOnly}>{user.full_name}</span>

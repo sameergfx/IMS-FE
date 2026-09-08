@@ -115,13 +115,19 @@
 .active { background: #dcfce7; color: var(--success); }
 .inactive { background: #fee2e2; color: var(--danger); }
 
-.viewBtn { color: var(--blue); border: none; background: none; padding: .4rem .75rem; border-radius: 6px; font-size: .8rem; font-weight: 600; cursor: pointer; text-decoration: none; }
-.viewBtn:hover { background: var(--blue-lt); }
+.actions { display: flex; align-items: center; gap: .4rem; }
 
-.editBtn { background: var(--blue); color: white; border: none; padding: .4rem .9rem; border-radius: 6px; font-size: .8rem; font-weight: 600; cursor: pointer; white-space: nowrap; text-decoration: none; display: inline-block; }
-.editBtn:hover { background: #1d4ed8; }
+.iconBtn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 7px;
+  border: 1px solid var(--border); background: white; color: var(--slate);
+  cursor: pointer; transition: all .15s; text-decoration: none;
+}
+.iconBtn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-lt); }
 
-.deleteBtn { background: none; color: var(--danger); border: 1px solid var(--danger); padding: .4rem .9rem; border-radius: 6px; font-size: .8rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
-.deleteBtn:hover { background: #fee2e2; }
+.iconBtnEdit:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-lt); }
+
+.iconBtnDelete { color: var(--danger); }
+.iconBtnDelete:hover { border-color: var(--danger); color: var(--danger); background: #fee2e2; }
 
 .state { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 3rem; text-align: center; color: var(--slate); }

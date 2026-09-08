@@ -21,7 +21,7 @@ export default function InvoicesPage() {
 
   const filtered = invoices.filter(inv => {
     const matchSearch = inv.invoice_number.toLowerCase().includes(search.toLowerCase()) ||
-      (inv.description ?? "").toLowerCase().includes(search.toLowerCase())
+      (inv.admission_number ?? "").toLowerCase().includes(search.toLowerCase())
     const matchFilter = filter === "all" || inv.status === filter
     return matchSearch && matchFilter
   })
@@ -72,23 +72,25 @@ export default function InvoicesPage() {
             <thead>
               <tr>
                 <th>Invoice No</th>
-                <th>Party</th>
-                <th>Date</th>
+                <th>Name</th>
+                <th>Admission Number</th>
                 <th>Description</th>
+                <th>Date</th>
                 <th>Total</th>
                 <th>Paid</th>
                 <th>Balance</th>
                 <th>Status</th>
-                <th></th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map(inv => (
                 <tr key={inv.id}>
-                  <td><span className={styles.invNo}>{inv.invoice_number}</span></td>
-                  <td><PartyBadge userId={inv.user_id} compact /></td>
+                  <td>{inv.invoice_number}</td>
+                  <td>{inv.full_name}</td>
+                  <td>{inv.admission_number}</td>
+                  <td>{inv.description}</td>
                   <td>{new Date(inv.invoice_date).toLocaleDateString()}</td>
-                  <td className={styles.desc}>{inv.description ?? "—"}</td>
                   <td className={styles.amount}>₹{Number(inv.total_amount).toLocaleString()}</td>
                   <td className={styles.paid}>₹{Number(inv.paid_amount).toLocaleString()}</td>
                   <td className={styles.balance}>₹{Number(inv.balance_due).toLocaleString()}</td>

@@ -411,7 +411,7 @@ export default function CreateUserPage() {
             <div className={styles.grid2}>
               <div className={styles.field}>
                 <label className={styles.label}>Full Name *</label>
-                <input id="full_name" className={styles.input} placeholder="e.g. Ravi Kumar"
+                <input id="full_name" className={styles.input} placeholder="e.g. Sameer Sharahudeen"
                   value={basic.full_name} onChange={e => setBasicField("full_name", e.target.value)} />
               </div>
               <div className={styles.field}>

@@ -76,6 +76,13 @@
 
 /* Items table */
 .itemsHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; padding-bottom: .75rem; border-bottom: 1px solid var(--border); }
+.itemsHeaderActions { display: flex; gap: .5rem; }
+
+.newCategoryBtn {
+  background: var(--green-lt); color: var(--navy); border: 1.5px solid var(--border);
+  padding: .4rem .9rem; border-radius: 6px; font-size: .85rem; font-weight: 600; cursor: pointer;
+}
+.newCategoryBtn:hover { border-color: var(--blue); color: var(--blue); }
 
 .addItemBtn {
   background: var(--blue-lt); color: var(--blue); border: none;
@@ -122,6 +129,14 @@
 .submitBtn { background: var(--blue); color: white; border: none; padding: .7rem 1.75rem; border-radius: var(--radius); font-size: .9rem; font-weight: 600; cursor: pointer; transition: background .15s; }
 .submitBtn:hover:not(:disabled) { background: #1d4ed8; }
 .submitBtn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* New category modal */
+.modalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: grid; place-items: center; z-index: 50; padding: 1rem; }
+.modalBox { background: white; border-radius: 12px; padding: 1.75rem; width: 100%; max-width: 420px; box-shadow: var(--shadow-lg); }
+.modalTitle { font-family: var(--font-head); font-size: 1.1rem; font-weight: 700; color: var(--navy); margin-bottom: .25rem; }
+.modalSub { font-size: .85rem; color: var(--slate); margin-bottom: 1.25rem; }
+.modalField { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1rem; }
+.modalActions { display: flex; justify-content: flex-end; gap: .75rem; margin-top: .5rem; }
 
 @media (max-width: 768px) {
   .grid2 { grid-template-columns: 1fr; }

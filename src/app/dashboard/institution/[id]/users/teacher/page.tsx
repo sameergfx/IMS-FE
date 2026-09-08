@@ -4,11 +4,11 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Eye, Pencil, Trash2 } from "lucide-react"
-import { usersApi } from "@/lib/api"
+import { institutionsApi, usersApi } from "@/lib/api"
 import { UserResponse, UserType } from "@/types"
 import PartyBadge from "@/components/ui/PartyBadge"
 import DeleteUserModal from "@/components/users/DeleteUserModal"
-import styles from "./page.module.css"
+import styles from "../page.module.css"
 
 const TYPE_COLORS: Record<UserType, string> = {
   student: "#3b82f6",
@@ -20,9 +20,6 @@ const TYPE_COLORS: Record<UserType, string> = {
 
 export default function UsersPage() {
   const { id } = useParams()
-  console.log("Institution ID:", id) // Log the institution ID to verify it's being captured correctly
-  const { type } = useParams() // Get the user type from the URL
-  console.log("User Type:", type) // Log the user type to verify it's being captured correctly
   const router = useRouter()
   const [users,    setUsers]    = useState<UserResponse[]>([])
   const [loading,  setLoading]  = useState(true)
@@ -31,7 +28,7 @@ export default function UsersPage() {
   const [deleteUser, setDeleteUser] = useState<UserResponse | null>(null)
 
   const load = () => {
-    usersApi.getAll(Number(id))
+    institutionsApi.getUsersByType(Number(id), "teacher")
       .then(setUsers)
       .catch(err => console.error(err))
       .finally(() => setLoading(false))
@@ -40,8 +37,7 @@ export default function UsersPage() {
   useEffect(() => { load() }, [id])
 
   const filtered = users.filter(u => {
-    const matchSearch = u.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
+    const matchSearch = u.full_name.toLowerCase().includes(search.toLowerCase())
     const matchFilter = filter === "all" || u.user_type === filter
     return matchSearch && matchFilter
   })
@@ -55,8 +51,8 @@ export default function UsersPage() {
     <div className={styles.page}>
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Users</h1>
-          <p className={styles.sub}>{users.length} users in this institution</p>
+          <h1 className={styles.title}>Teachers</h1>
+          <p className={styles.sub}>{users.length} teacher(s) in this institution</p>
         </div>
         <button
           id="add_user_btn"
@@ -68,23 +64,14 @@ export default function UsersPage() {
       </div>
 
       <div className={styles.toolbar}>
-        <input className={styles.search} placeholder="Search by name or email..."
+        <input className={styles.search} placeholder="Search by name..."
           value={search} onChange={e => setSearch(e.target.value)} />
-        <div className={styles.filters}>
-          {["all", "student", "teacher", "staff", "member"].map(f => (
-            <button key={f}
-              className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ""}`}
-              onClick={() => setFilter(f)}>
-              {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1)}
-            </button>
-          ))}
-        </div>
       </div>
 
       {loading ? (
         <div className={styles.state}>Loading users...</div>
       ) : filtered.length === 0 ? (
-        <div className={styles.state}>No users found jkdhfkj sd.</div>
+        <div className={styles.state}>No users found.</div>
       ) : (
         <div className={styles.tableWrap}>
           <table className={styles.table}>

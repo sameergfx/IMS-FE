@@ -13,9 +13,17 @@ export interface Account {
 
 // ── Invoice ──────────────────────────────────────────────────────────────────
 
+export interface InvoiceCategory {
+  id:          number
+  name:        string
+  code:        string
+  is_active:   boolean
+}
+
 export interface InvoiceItem {
   id:          number
   account_id:  number
+  category_name: string
   description: string
   amount:      number
   discount:    number
@@ -26,6 +34,8 @@ export interface Invoice {
   id:             number
   invoice_number: string
   user_id:        number
+  full_name:      string
+  admission_number: string
   institution_id: number
   invoice_date:   string
   due_date:       string | null
@@ -45,6 +55,8 @@ export interface Invoice {
 
 export interface InvoiceItemCreate {
   account_id:  number
+  category_name: string
+  category_id: number
   description: string
   amount:      number
   discount:    number
@@ -93,3 +105,65 @@ export interface ReceiptCreate {
   notes:            string | null
   issued_by:        number | null
 }
+
+// ── Expense ──────────────────────────────────────────────────────────────────
+
+export interface ExpenseCategory {
+  id:          number
+  name:        string
+  code:        string
+  is_active:   boolean
+}
+
+export type ExpenseStatus = "active" | "cancelled"
+
+export interface Expense {
+  id:                  number
+  expense_number:      string
+  institution_id:      number
+  account_id:          number
+  expense_date:        string
+  paid_to:             string
+  payment_method:      PaymentMethod
+  amount:              number
+  reference_number:    string | null
+  bank_name:           string | null
+  description:         string | null
+  notes:               string | null
+  status:              ExpenseStatus
+  cancellation_reason: string | null
+  issued_by:           number | null
+  created_at:          string
+  updated_at:          string
+}
+
+export interface ExpenseItem {
+  id:          number
+  account_id:  number
+  description: string
+  amount:      number
+  discount:    number
+  net_amount:  number
+}
+
+export interface ExpenseItemCreate {
+  account_id:  number
+  description: string
+  amount:      number
+  discount:    number
+}
+
+export interface ExpenseCreate {
+  institution_id:   number
+  account_id:       number
+  expense_date:     string
+  paid_to:          string
+  payment_method:   PaymentMethod
+  amount:           number
+  reference_number: string | null
+  bank_name:        string | null
+  description:      string | null
+  notes:            string | null
+  issued_by:        number | null
+}
+

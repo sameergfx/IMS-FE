@@ -1,5 +1,5 @@
 import { TokenResponse, UserResponse } from "@/types"
-import { Receipt, Account, Invoice } from "@/types/accounting"
+import { Receipt, Account, Invoice, InvoiceCategory, Expense, ExpenseCategory } from "@/types/accounting"
 import { Institution } from "@/types/institution"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
@@ -75,6 +75,7 @@ export const institutionsApi = {
   getAll:   ()             => apiFetch<Institution[]>("/institutions/"),
   getOne:   (id: number)   => apiFetch<Institution>(`/institutions/${id}`),
   getUsers: (id: number)   => apiFetch<UserResponse[]>(`/institutions/${id}/users`),
+  getUsersByType: (id: number, userType: string) => apiFetch<UserResponse[]>(`/institutions/${id}/users/${userType}`),
   create:   (data: any)    => apiFetch<Institution>("/institutions/", { method: "POST", body: JSON.stringify(data) }),
   update:   (id: number, data: any) => apiFetch<Institution>(`/institutions/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
 }
@@ -110,7 +111,13 @@ export const userMetaApi = {
 
 export const accountingApi = {
   // Accounts
-  getAccounts: () => apiFetch<Account[]>("/accounting/accounts/active"),
+  getInvoiceCategories: () => apiFetch<InvoiceCategory[]>("/accounting/invoice-categories"),
+  createInvoiceCategory: (data: { name: string; created_by: number }) =>
+    apiFetch<Account>("/accounting/invoice-categories", { method: "POST", body: JSON.stringify(data) }),
+
+  getExpenseCategories: () => apiFetch<ExpenseCategory[]>("/accounting/expense-categories"),
+  createExpenseCategory: (data: { name: string; code: string; account_type: string; description?: string | null }) =>
+    apiFetch<Account>("/accounting/expense-categories", { method: "POST", body: JSON.stringify(data) }),
 
   // Invoices
   getInvoices:        ()           => apiFetch<Invoice[]>("/accounting/invoices"),
@@ -131,4 +138,12 @@ export const accountingApi = {
   createReceipt:      (data: any)  => apiFetch<Receipt>("/accounting/receipts", { method: "POST", body: JSON.stringify(data) }),
   cancelReceipt:      (id: number, reason: string) =>
     apiFetch<Receipt>(`/accounting/receipts/${id}/cancel`, { method: "POST", body: JSON.stringify({ cancellation_reason: reason }) }),
+  
+  // Expenses
+  getExpenses:              ()           => apiFetch<Expense[]>("/accounting/expenses"),
+  getExpensesByInstitution: (institutionId: number) => apiFetch<Expense[]>(`/accounting/expenses/institution/${institutionId}`),
+  getExpense:               (id: number) => apiFetch<Expense>(`/accounting/expenses/${id}`),
+  createExpense:            (data: any)  => apiFetch<Expense>("/accounting/expenses", { method: "POST", body: JSON.stringify(data) }),
+  cancelExpense:            (id: number, reason: string) =>
+    apiFetch<Expense>(`/accounting/expenses/${id}/cancel`, { method: "POST", body: JSON.stringify({ cancellation_reason: reason }) }),
 }

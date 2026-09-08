@@ -13,7 +13,16 @@ interface NavItem  { href?: string; label: string; icon: string; children?: NavC
 
 const buildNav = (id: number): NavItem[] => [
   { href:  `/dashboard/institution/${id}`,          icon: "⊞", label: "Dashboard" },
-  { href:  `/dashboard/institution/${id}/users`,    icon: "👥", label: "Users"     },
+  { 
+    href:  `/dashboard/institution/${id}/users`,    icon: "👥", label: "Users",
+    children: [
+      { href: `/dashboard/institution/${id}/users/create`,   label: "Add New"  },
+      { href: `/dashboard/institution/${id}/users/student`,   label: "Students"  },
+      { href: `/dashboard/institution/${id}/users/teacher`,   label: "Teachers"  },
+      { href: `/dashboard/institution/${id}/users/staff`,   label: "Staff"  },
+      { href: `/dashboard/institution/${id}/users/member`,   label: "Members"  },
+    ],     
+  },
   {
     icon: "📒", label: "Accounts",
     children: [
