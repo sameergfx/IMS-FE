@@ -11,6 +11,7 @@ interface AuthContextType {
   loading:             boolean
   selectedInstitution: Institution | null
   selectInstitution:   (inst: Institution) => void
+  updateSelectedInstitution: (inst: Institution) => void
   clearInstitution:    () => void
   login:               (email: string, password: string) => Promise<void>
   logout:              () => void
@@ -33,26 +34,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const saved = sessionStorage.getItem("institution")
     if (saved) setSelectedInstitution(JSON.parse(saved))
 
+    const session = tokenStorage.getSession()
     authApi.me()
-      .then(setUser)
-      .catch(() => tokenStorage.clear())
+      .then(value => { if (session === tokenStorage.getSession()) setUser(value) })
+      .catch(() => { if (session === tokenStorage.getSession()) tokenStorage.clear() })
       .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    const syncSession = (event: StorageEvent) => {
+      if (event.key !== "auth_session_version" && event.key !== null) return
+      sessionStorage.removeItem("institution")
+      setUser(null)
+      setSelectedInstitution(null)
+      window.location.replace(tokenStorage.getAccess() ? "/dashboard" : "/login")
+    }
+    window.addEventListener("storage", syncSession)
+    return () => window.removeEventListener("storage", syncSession)
   }, [])
 
   const login = async (email: string, password: string) => {
     const data = await authApi.login(email, password)
     tokenStorage.set(data.access_token, data.refresh_token)
+    const session = tokenStorage.getSession()
     const me = await authApi.me()
+    if (session !== tokenStorage.getSession()) return
     setUser(me)
     router.push("/dashboard")          // go to institution selector
   }
 
   const logout = () => {
-    authApi.logout()
+    void authApi.logout().catch(() => {
+      window.alert("You have signed out of this browser, but server logout could not be confirmed. Your server session may remain active until it expires.")
+    })
     sessionStorage.removeItem("institution")
     setUser(null)
     setSelectedInstitution(null)
-    router.push("/login")
+    router.replace("/login")
+  }
+
+  const updateSelectedInstitution = (inst: Institution) => {
+    setSelectedInstitution(inst)
+    sessionStorage.setItem("institution", JSON.stringify(inst))
   }
 
   const selectInstitution = (inst: Institution) => {
@@ -68,14 +91,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const refreshUser = async () => {
+    const session = tokenStorage.getSession()
     const me = await authApi.me()
+    if (session !== tokenStorage.getSession()) return
     setUser(me)
   }
 
   return (
     <AuthContext.Provider value={{
       user, loading,
-      selectedInstitution, selectInstitution, clearInstitution,
+      selectedInstitution, selectInstitution, updateSelectedInstitution, clearInstitution,
       login, logout, refreshUser,
     }}>
       {children}

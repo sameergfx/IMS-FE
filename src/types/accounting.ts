@@ -21,6 +21,7 @@ export interface InvoiceCategory {
 }
 
 export interface InvoiceItem {
+  category_id: number
   id:          number
   account_id:  number
   category_name: string
@@ -31,9 +32,12 @@ export interface InvoiceItem {
 }
 
 export interface Invoice {
+  donor_name?: string | null
+  donor_phone?: string | null
+  donor_address?: string | null
   id:             number
   invoice_number: string
-  user_id:        number
+  user_id:        number | null
   full_name:      string
   admission_number: string
   institution_id: number
@@ -76,10 +80,15 @@ export interface InvoiceCreate {
 // ── Receipt (payment against invoice) ─────────────────────────────────────────
 
 export interface Receipt {
+  donor_name?: string | null
+  donor_phone?: string | null
+  donor_address?: string | null
+  allocations?: { invoice_item_id: number; amount: number | string }[]
   id:                  number
   receipt_number:      string
   invoice_id:          number
-  user_id:             number
+  invoice_number:      string | null
+  user_id:             number | null
   institution_id:      number
   receipt_date:        string
   payment_method:      PaymentMethod
@@ -117,53 +126,111 @@ export interface ExpenseCategory {
 
 export type ExpenseStatus = "active" | "cancelled"
 
-export interface Expense {
-  id:                  number
-  expense_number:      string
-  institution_id:      number
-  account_id:          number
-  expense_date:        string
-  paid_to:             string
-  payment_method:      PaymentMethod
-  amount:              number
-  reference_number:    string | null
-  bank_name:           string | null
-  description:         string | null
-  notes:               string | null
-  status:              ExpenseStatus
-  cancellation_reason: string | null
-  issued_by:           number | null
-  created_at:          string
-  updated_at:          string
-}
+export interface Expense extends ExpenseRecord {}
 
 export interface ExpenseItem {
-  id:          number
-  account_id:  number
+  id: number
+  account_id: number | null
+  category_id: number | null
+  category: ExpenseCategory | null
   description: string
-  amount:      number
-  discount:    number
-  net_amount:  number
+  amount: number | string
+  discount: number | string
+  net_amount: number | string
 }
 
 export interface ExpenseItemCreate {
-  account_id:  number
+  category_id: number
   description: string
-  amount:      number
-  discount:    number
+  amount: number
+  discount: number
 }
 
 export interface ExpenseCreate {
   institution_id:   number
-  account_id:       number
   expense_date:     string
   paid_to:          string
   payment_method:   PaymentMethod
-  amount:           number
+  items:            ExpenseItemCreate[]
   reference_number: string | null
   bank_name:        string | null
   description:      string | null
   notes:            string | null
-  issued_by:        number | null
 }
 
+
+// Persisted expense records returned by the institution list endpoint.
+export interface ExpenseRecord {
+  id: number
+  expense_number: string
+  institution_id: number
+  category_id: number | null
+  category: ExpenseCategory | null
+  paid_to: string | null
+  payment_method: PaymentMethod | null
+  reference_number: string | null
+  bank_name: string | null
+  notes: string | null
+  status: ExpenseStatus
+  cancellation_reason: string | null
+  issued_by: number | null
+  user_id: number
+  expense_date: string
+  total_amount: number | string
+  description: string | null
+  items: ExpenseItem[]
+  created_at: string
+  updated_at: string
+}
+
+
+export interface StatementEntry {
+  date: string
+  kind: "receipt" | "expense"
+  id: number
+  number: string
+  party: string | null
+  description: string | null
+  invoice_id: number | null
+  invoice_number: string | null
+  category: string | null
+  money_in: string | number
+  money_out: string | number
+  balance: string | number
+}
+
+export interface AccountStatement {
+  institution_id: number
+  institution_name: string
+  start_date: string
+  end_date: string
+  opening_balance: string | number
+  total_receipts: string | number
+  total_expenses: string | number
+  closing_balance: string | number
+  entries: StatementEntry[]
+}
+
+export interface InvoiceUpdate {
+  due_date?: string | null
+  description?: string | null
+  academic_year?: string | null
+  invoice_date?: string
+  discount?: number
+  items?: { category_id: number; category_name: string; description: string; amount: number; discount: number }[]
+}
+
+export interface DailyStatement {
+  institution_id: number
+  institution_name: string
+  date: string
+  opening_balance: string | number
+  closing_balance: string | number
+  total_received: string | number
+  total_expenses: string | number
+  net_movement: string | number
+  categories: DailyStatementGroup[]
+  payment_methods: DailyStatementGroup[]
+  entries: { id: number; kind: 'receipt' | 'expense'; number: string; category: string; description: string; payment_method: string; received: string | number; spent: string | number }[]
+}
+export interface DailyStatementGroup { name: string; received: string | number; spent: string | number }

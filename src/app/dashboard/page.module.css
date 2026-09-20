@@ -3,8 +3,11 @@
 .header {
   display: flex; align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap; gap: 1rem;
   margin-bottom: 1.5rem;
 }
+
+.headerActions { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; }
 
 .greeting { font-size: .9rem; color: var(--slate); margin-bottom: .2rem; }
 .title { font-family: var(--font-head); font-size: 1.75rem; font-weight: 700; color: var(--navy); }
@@ -46,11 +49,12 @@
 .card:hover { border-color: var(--blue); box-shadow: 0 4px 20px rgba(37,99,235,.12); transform: translateY(-2px); }
 
 .logoWrap {
-  width: 52px; height: 52px; border-radius: 12px;
-  background: var(--navy); display: grid; place-items: center; overflow: hidden;
+  width: 52px; height: 52px; border-radius: 8px;
+  display: grid; place-items: center; overflow: hidden;
+  border: 1px solid #ddd; padding:5px
 }
 .logo { width: 100%; height: 100%; object-fit: cover; }
-.initials { font-family: var(--font-head); font-size: 1rem; font-weight: 700; color: white; }
+.initials { font-family: var(--font-head); font-size: 1rem; font-weight: 700; color: var(--navy); }
 
 .cardBody { flex: 1; }
 .instName { font-family: var(--font-head); font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: .4rem; }

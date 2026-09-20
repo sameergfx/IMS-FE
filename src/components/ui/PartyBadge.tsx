@@ -1,16 +1,20 @@
 "use client"
 
 import { useParty } from "@/lib/useParty"
+import { UserResponse } from "@/types"
 import styles from "./PartyBadge.module.css"
 
 interface Props {
-  userId:   number
+  userId:   number | null
+  donorName?: string | null
   compact?: boolean
+  user?: UserResponse
 }
 
-export default function PartyBadge({ userId, compact = false }: Props) {
-  const { party, loading } = useParty(userId)
+export default function PartyBadge({ userId, compact = false, user: suppliedUser, donorName }: Props) {
+  const { party, loading } = useParty(userId, suppliedUser)
 
+  if (donorName) return <span>{donorName}</span>
   if (loading) return <span className={styles.loading}>Loading...</span>
   if (!party)  return <span className={styles.fallback}>User #{userId}</span>
 

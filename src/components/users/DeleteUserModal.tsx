@@ -1,5 +1,6 @@
 "use client"
 
+import { useUiAccess } from "@/components/access/PermissionGate"
 import { useState } from "react"
 import { usersApi } from "@/lib/api"
 import { UserResponse } from "@/types"
@@ -13,11 +14,13 @@ interface Props {
 }
 
 export default function DeleteUserModal({ user, onClose, onSuccess }: Props) {
+  const { can } = useUiAccess()
   const [deleting, setDeleting] = useState(false)
   const [error,    setError]    = useState("")
   const [confirm,  setConfirm]  = useState("")
 
   const handleDelete = async () => {
+    if (!can("users.delete")) return
     if (confirm !== "DELETE") {
       setError('Type "DELETE" to confirm')
       return
@@ -33,6 +36,8 @@ export default function DeleteUserModal({ user, onClose, onSuccess }: Props) {
       setDeleting(false)
     }
   }
+
+  if (!can("users.delete")) return null
 
   return (
     <div className={styles.overlay}>

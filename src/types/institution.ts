@@ -1,4 +1,8 @@
+export type InstitutionType = "educational" | "masjid"
+
 export interface Institution {
+  short_name: string | null
+  institution_type: InstitutionType
   id:             number
   name:           string
   place:          string | null

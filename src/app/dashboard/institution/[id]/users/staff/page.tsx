@@ -1,4 +1,5 @@
 "use client"
+import PermissionGate from "@/components/access/PermissionGate"
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -20,9 +21,6 @@ const TYPE_COLORS: Record<UserType, string> = {
 
 export default function UsersPage() {
   const { id } = useParams()
-  const { type } = useParams() // Get the user type from the URL
-  console.log("Institution ID:", id) // Log the institution ID to verify it's being captured correctly
-  console.log("User Type:", type) // Log the user type to verify it's being captured correctly
   const router = useRouter()
   const [users,    setUsers]    = useState<UserResponse[]>([])
   const [loading,  setLoading]  = useState(true)
@@ -58,13 +56,13 @@ export default function UsersPage() {
           <h1 className={styles.title}>Staffs</h1>
           <p className={styles.sub}>{users.length} staff(s) in this institution</p>
         </div>
-        <button
+        <PermissionGate action="users.create"><button
           id="add_user_btn"
           className={styles.addBtn}
           onClick={() => router.push(`/dashboard/institution/${id}/users/create`)}
         >
           + Add User
-        </button>
+        </button></PermissionGate>
       </div>
 
       <div className={styles.toolbar}>
@@ -98,7 +96,7 @@ export default function UsersPage() {
                         {u.full_name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
                       </div>
                       {/* <span className={styles.name}>{u.full_name}</span> */}
-                      <PartyBadge userId={u.id} compact />
+                      <PartyBadge userId={u.id} user={u} compact />
                     </div>
                   </td>
                   <td>{u.phone || "-"}</td>
@@ -119,22 +117,22 @@ export default function UsersPage() {
                       >
                         <Eye size={16} />
                       </Link>
-                      <Link
+                      <PermissionGate action="students.update"><Link
                         href={`/dashboard/institution/${id}/users/${u.id}/edit`}
                         className={`${styles.iconBtn} ${styles.iconBtnEdit}`}
                         title="Edit"
                         aria-label={`Edit ${u.full_name}`}
                       >
                         <Pencil size={16} />
-                      </Link>
-                      <button
+                      </Link></PermissionGate>
+                      <PermissionGate action="users.delete"><button
                         className={`${styles.iconBtn} ${styles.iconBtnDelete}`}
                         title="Delete"
                         aria-label={`Delete ${u.full_name}`}
                         onClick={() => setDeleteUser(u)}
                       >
                         <Trash2 size={16} />
-                      </button>
+                      </button></PermissionGate>
                     </div>
                   </td>
                 </tr>

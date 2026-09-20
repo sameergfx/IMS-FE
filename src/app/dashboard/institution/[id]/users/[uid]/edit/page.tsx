@@ -1,9 +1,13 @@
 "use client"
+import PermissionGate from "@/components/access/PermissionGate"
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { usersApi, userMetaApi } from "@/lib/api"
 import { UserResponse } from "@/types"
+import { metaApi } from "@/lib/metaApi"
+import UserPhotoField from "@/components/ui/UserPhotoField"
+import InstitutionRolePanel from "@/components/access/InstitutionRolePanel"
 import PartyBadge from "@/components/ui/PartyBadge"
 import styles from "./detail.module.css"
 
@@ -17,6 +21,7 @@ export default function UserDetailPage({ data, onChange }: { data: any; onChange
   const [user,     setUser]     = useState<UserResponse | null>(null)
   const [meta,     setMeta]     = useState<any>(null)
   const [loading,  setLoading]  = useState(true)
+  const [photoUploading, setPhotoUploading] = useState(false)
   const [saving,   setSaving]   = useState(false)
   const [error,    setError]    = useState("")
   const [success,  setSuccess]  = useState("")
@@ -29,6 +34,7 @@ export default function UserDetailPage({ data, onChange }: { data: any; onChange
   })
 
   const [metaForm, setMetaForm] = useState({
+    profile_photo: null as string | null,
     admission_number: "",
     roll_number:      "",
     grade:            "",
@@ -66,6 +72,7 @@ export default function UserDetailPage({ data, onChange }: { data: any; onChange
         is_active: u.is_active,
       })
       setMetaForm({
+        profile_photo: null,
         admission_number: u.admission_number || "",
         roll_number:      u.roll_number || "",
         grade:            u.grade || "",
@@ -107,6 +114,7 @@ export default function UserDetailPage({ data, onChange }: { data: any; onChange
         m = await userMetaApi.getMemberMeta(u.id)
         setMetaForm(m || {})
       }
+      if (u.user_type === "admin") { m = await userMetaApi.getAdminMeta(Number(uid)); setMetaForm(m || {}) }
       setMeta(m)
     } catch (err: any) {
       setError(err.message || "Failed to load user")
@@ -123,6 +131,7 @@ export default function UserDetailPage({ data, onChange }: { data: any; onChange
   
 
   const handleSave = async () => {
+    if (saving || photoUploading) return
     setError("")
     setSuccess("")
 
@@ -141,13 +150,15 @@ export default function UserDetailPage({ data, onChange }: { data: any; onChange
 
       // Update meta if user type has meta
       if (user?.user_type === "student") {
-        await userMetaApi.updateStudentMeta(Number(uid), metaForm)
+        await (meta ? userMetaApi.updateStudentMeta(Number(uid), metaForm) : metaApi.createStudent(Number(uid), metaForm))
       } else if (user?.user_type === "teacher") {
-        await userMetaApi.updateTeacherMeta(Number(uid), metaForm)
+        await (meta ? userMetaApi.updateTeacherMeta(Number(uid), metaForm) : metaApi.createTeacher(Number(uid), metaForm))
       } else if (user?.user_type === "staff") {
-        await userMetaApi.updateStaffMeta(Number(uid), metaForm)
+        await (meta ? userMetaApi.updateStaffMeta(Number(uid), metaForm) : metaApi.createStaff(Number(uid), metaForm))
       } else if (user?.user_type === "member") {
-        await userMetaApi.updateMemberMeta(Number(uid), metaForm)
+        await (meta ? userMetaApi.updateMemberMeta(Number(uid), metaForm) : metaApi.createMember(Number(uid), metaForm))
+      } else if (user?.user_type === "admin") {
+        await (meta ? userMetaApi.updateAdminMeta(Number(uid), metaForm) : metaApi.createAdmin(Number(uid), metaForm))
       }
 
       setSuccess("User saved successfully!")
@@ -165,7 +176,7 @@ export default function UserDetailPage({ data, onChange }: { data: any; onChange
   const f = (label: string, key: string, type = "text", placeholder = "", value = "", req = false) => (
     <div className={styles.field}>
       <label className={styles.label}>{label}</label>
-      <input className={styles.input} type={type} placeholder={placeholder} value={value}
+      <input className={styles.input} type={type} placeholder={placeholder} value={value} readOnly={key === "employee_id"}
          onChange={e => setMetaField(key, e.target.value)} />
     </div>
   )
@@ -186,6 +197,8 @@ export default function UserDetailPage({ data, onChange }: { data: any; onChange
         <h1 className={styles.title}>Edit User</h1>
       </div>
 
+      <UserPhotoField value={metaForm.profile_photo} onChange={url => setMetaField("profile_photo", url)} onBusyChange={setPhotoUploading} disabled={saving || photoUploading} />
+      <InstitutionRolePanel userId={Number(uid)} institutionId={Number(id)} />
       <div className={styles.card}>
         <h2 className={styles.cardTitle}>User Information</h2>
         <div className={styles.partySection}>
@@ -293,9 +306,9 @@ export default function UserDetailPage({ data, onChange }: { data: any; onChange
 
       <div className={styles.actions}>
         <button className={styles.cancelBtn} onClick={() => router.back()}>Cancel</button>
-        <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
+        <PermissionGate action="students.update"><button className={styles.saveBtn} onClick={handleSave} disabled={saving || photoUploading}>
           {saving ? "Saving..." : "Save Changes"}
-        </button>
+        </button></PermissionGate>
       </div>
     </div>
   )

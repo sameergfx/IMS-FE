@@ -1,9 +1,12 @@
 "use client"
+import PermissionGate from "@/components/access/PermissionGate"
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Eye, Pencil, Trash2 } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
+import { institutionUserTypes } from "@/lib/institution-types"
 import { usersApi } from "@/lib/api"
 import { UserResponse, UserType } from "@/types"
 import PartyBadge from "@/components/ui/PartyBadge"
@@ -20,6 +23,7 @@ const TYPE_COLORS: Record<UserType, string> = {
 
 export default function UsersPage() {
   const { id } = useParams()
+  const { selectedInstitution } = useAuth()
   console.log("Institution ID:", id) // Log the institution ID to verify it's being captured correctly
   const { type } = useParams() // Get the user type from the URL
   console.log("User Type:", type) // Log the user type to verify it's being captured correctly
@@ -58,20 +62,20 @@ export default function UsersPage() {
           <h1 className={styles.title}>Users</h1>
           <p className={styles.sub}>{users.length} users in this institution</p>
         </div>
-        <button
+        <PermissionGate action="users.create"><button
           id="add_user_btn"
           className={styles.addBtn}
           onClick={() => router.push(`/dashboard/institution/${id}/users/create`)}
         >
           + Add User
-        </button>
+        </button></PermissionGate>
       </div>
 
       <div className={styles.toolbar}>
         <input className={styles.search} placeholder="Search by name or email..."
           value={search} onChange={e => setSearch(e.target.value)} />
         <div className={styles.filters}>
-          {["all", "student", "teacher", "staff", "member"].map(f => (
+          {["all", ...institutionUserTypes(selectedInstitution?.institution_type)].map(f => (
             <button key={f}
               className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ""}`}
               onClick={() => setFilter(f)}>
@@ -128,22 +132,22 @@ export default function UsersPage() {
                       >
                         <Eye size={16} />
                       </Link>
-                      <Link
+                      <PermissionGate action="students.update"><Link
                         href={`/dashboard/institution/${id}/users/${u.id}/edit`}
                         className={`${styles.iconBtn} ${styles.iconBtnEdit}`}
                         title="Edit"
                         aria-label={`Edit ${u.full_name}`}
                       >
                         <Pencil size={16} />
-                      </Link>
-                      <button
+                      </Link></PermissionGate>
+                      <PermissionGate action="users.delete"><button
                         className={`${styles.iconBtn} ${styles.iconBtnDelete}`}
                         title="Delete"
                         aria-label={`Delete ${u.full_name}`}
                         onClick={() => setDeleteUser(u)}
                       >
                         <Trash2 size={16} />
-                      </button>
+                      </button></PermissionGate>
                     </div>
                   </td>
                 </tr>

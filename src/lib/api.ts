@@ -1,17 +1,21 @@
-import { TokenResponse, UserResponse } from "@/types"
-import { Receipt, Account, Invoice, InvoiceCategory, Expense, ExpenseCategory } from "@/types/accounting"
+import { InstitutionDashboardData } from "@/types/dashboard"
+import { TokenResponse, UserResponse, UserType, InstitutionAccess, Permission, Role } from "@/types"
+import { Receipt, Account, Invoice, InvoiceUpdate, InvoiceCategory, Expense, ExpenseCategory, ExpenseRecord, ExpenseCreate, AccountStatement } from "@/types/accounting"
 import { Institution } from "@/types/institution"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 export const tokenStorage = {
+  getSession: () => localStorage.getItem("auth_session_version"),
   getAccess:  () => localStorage.getItem("access_token"),
   getRefresh: () => localStorage.getItem("refresh_token"),
   set: (access: string, refresh: string) => {
+    localStorage.setItem("auth_session_version", crypto.randomUUID())
     localStorage.setItem("access_token",  access)
     localStorage.setItem("refresh_token", refresh)
   },
   clear: () => {
+    localStorage.setItem("auth_session_version", crypto.randomUUID())
     localStorage.removeItem("access_token")
     localStorage.removeItem("refresh_token")
     localStorage.removeItem("user")
@@ -19,6 +23,7 @@ export const tokenStorage = {
 }
 
 async function apiFetch<T>(path: string, options: RequestInit = {}, retry = true): Promise<T> {
+  const session = tokenStorage.getSession()
   const token = tokenStorage.getAccess()
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
@@ -29,8 +34,11 @@ async function apiFetch<T>(path: string, options: RequestInit = {}, retry = true
     },
   })
 
+  if (session !== tokenStorage.getSession()) throw new Error("Session changed")
+
   if (res.status === 401 && retry) {
     const refreshed = await refreshAccessToken()
+    if (session !== tokenStorage.getSession()) throw new Error("Session changed")
     if (refreshed) return apiFetch<T>(path, options, false)
     tokenStorage.clear()
     window.location.href = "/login"
@@ -38,13 +46,25 @@ async function apiFetch<T>(path: string, options: RequestInit = {}, retry = true
   }
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Unknown error" }))
-    throw new Error(err.detail || "Request failed")
+    const body = await res.json().catch(() => null)
+    const detail = body?.detail
+    const message = typeof detail === "string"
+      ? detail
+      : Array.isArray(detail)
+        ? detail.map((item: { msg?: string }) => item.msg || "Invalid value").join("; ")
+        : `Request failed (${res.status})`
+    throw new Error(message)
   }
-  return res.json()
+
+  if (res.status === 204) {
+    return undefined as T
+  }
+
+  return res.json() as Promise<T>
 }
 
 async function refreshAccessToken(): Promise<boolean> {
+  const session = tokenStorage.getSession()
   const refresh = tokenStorage.getRefresh()
   if (!refresh) return false
   try {
@@ -55,6 +75,7 @@ async function refreshAccessToken(): Promise<boolean> {
     })
     if (!res.ok) return false
     const data = await res.json()
+    if (session !== tokenStorage.getSession() || refresh !== tokenStorage.getRefresh()) return false
     localStorage.setItem("access_token", data.access_token)
     return true
   } catch { return false }
@@ -66,12 +87,26 @@ export const authApi = {
   login: (email: string, password: string) =>
     apiFetch<TokenResponse>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
   me:     () => apiFetch<UserResponse>("/auth/me"),
-  logout: () => { tokenStorage.clear() },
+  logout: async () => {
+    const refresh = tokenStorage.getRefresh()
+    tokenStorage.clear()
+    if (!refresh) return
+    const response = await fetch(`${BASE_URL}/auth/logout`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refresh }), keepalive: true,
+    })
+    if (!response.ok) throw new Error("Server logout failed")
+  },
 }
 
 // ── Institutions API ──────────────────────────────────────────────────────────
 
 export const institutionsApi = {
+  uploadLogo: (id: number, file: File) => apiFetch<{ url: string }>(`/institutions/${id}/logo`, {
+    method: "POST", body: file, headers: { "Content-Type": file.type },
+  }),
+  getDashboard: (institutionId: number, asOf: string) =>
+    apiFetch<InstitutionDashboardData>(`/dashboard/institution/${institutionId}?as_of=${encodeURIComponent(asOf)}`),
   getAll:   ()             => apiFetch<Institution[]>("/institutions/"),
   getOne:   (id: number)   => apiFetch<Institution>(`/institutions/${id}`),
   getUsers: (id: number)   => apiFetch<UserResponse[]>(`/institutions/${id}/users`),
@@ -81,19 +116,96 @@ export const institutionsApi = {
 }
 
 // ── Users API ─────────────────────────────────────────────────────────────────
-
 export const usersApi = {
+  uploadMyPhoto: (file: File) => apiFetch<{ url: string }>("/users/me/photo-upload", { method: "POST", body: file, headers: { "Content-Type": file.type } }),
+  saveMyPhoto: (profile_photo: string | null) => apiFetch<{ profile_photo: string | null }>("/users/me/photo", { method: "PATCH", body: JSON.stringify({ profile_photo }) }),
+  uploadPhoto: (file: File) => apiFetch<{ url: string }>("/users/photos", { method: "POST", body: file, headers: { "Content-Type": file.type } }),
   getAll:  (institutionId?: number) =>
     apiFetch<UserResponse[]>(`/users/${institutionId ? `?institution_id=${institutionId}` : ""}`),
   getUser: (id: number) => apiFetch<UserResponse>(`/users/${id}`),
   create:  (data: any)  => apiFetch<UserResponse>("/users/", { method: "POST", body: JSON.stringify(data) }),
   update:  (id: number, data: any) => apiFetch<UserResponse>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
   delete:  (id: number) => apiFetch<any>(`/users/${id}`, { method: "DELETE" }),
+
+  // Institution access (multi-institution support)
+  getInstitutionAccess: (userId: number) =>
+    apiFetch<InstitutionAccess[]>(`/users/${userId}/institution-access`),
+  grantInstitutionAccess: (userId: number, data: { institution_id: number; role: UserType }) =>
+    apiFetch<InstitutionAccess>(`/users/${userId}/institution-access`, { method: "POST", body: JSON.stringify(data) }),
+  revokeInstitutionAccess: (userId: number, institutionId: number) =>
+    apiFetch<void>(`/users/${userId}/institution-access/${institutionId}`, { method: "DELETE" }),
+}
+
+export const accessApi = {
+  getTemporaryAccess: (userId: number, institutionId: number) => apiFetch<any[]>(`/users/${userId}/institutions/${institutionId}/temporary-access`),
+  grantTemporaryAccess: (userId: number, institutionId: number, data: { permission_code: string; expires_at: string; reason: string }) => apiFetch<any>(`/users/${userId}/institutions/${institutionId}/temporary-access`, { method: "POST", body: JSON.stringify(data) }),
+  revokeTemporaryAccess: (grantId: number) => apiFetch<any>(`/temporary-access/${grantId}/revoke`, { method: "POST" }),
+  getTemporaryAccessEvents: (grantId: number) => apiFetch<any[]>(`/temporary-access/${grantId}/events`),
+    getPermissions:  () => apiFetch<Permission[]>("/permissions"),
+  createPermission: (data: { code: string; description?: string | null }) =>
+    apiFetch<Permission>("/permissions", { method: "POST", body: JSON.stringify(data) }),
+
+  getRoles:  () => apiFetch<Role[]>("/roles/all"),
+  createRole: (data: { name: string; description?: string | null }) =>
+    apiFetch<Role>("/roles", { method: "POST", body: JSON.stringify(data) }),
+
+  addPermissionToRole: (roleId: number, permissionId: number) =>
+    apiFetch<Role>(`/roles/${roleId}/permissions/${permissionId}`, { method: "POST" }),
+  removePermissionFromRole: (roleId: number, permissionId: number) =>
+    apiFetch<Role>(`/roles/${roleId}/permissions/${permissionId}`, { method: "DELETE" }),
+
+  getMyPermissions: (institutionId: number) =>
+    apiFetch<{ is_superadmin: boolean; permissions: string[]; permanent_permissions?: string[]; temporary_access?: { permission_code: string; expires_at: string }[] }>(`/auth/me/permissions/${institutionId}`),
+
+  getUserInstitutions: (userId: number) =>
+    apiFetch<{ institution_id: number; institution_name: string; role_id: number; role_name: string }[]>(
+      `/users/${userId}/institutions`
+    ),
+  assignRole: (userId: number, institutionId: number, roleId: number) =>
+    apiFetch<{ detail: string }>(`/users/${userId}/institutions/${institutionId}/roles/${roleId}`, { method: "POST" }),
+  revokeRole: (userId: number, institutionId: number, roleId: number) =>
+    apiFetch<{ detail: string }>(`/users/${userId}/institutions/${institutionId}/roles/${roleId}`, { method: "DELETE" }),
+
+  updatePermission: (
+    permissionId: number,
+    data: {
+      code?: string
+      description?: string | null
+    }
+  ) =>
+    apiFetch<Permission>(`/permissions/${permissionId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  deletePermission: (permissionId: number) =>
+    apiFetch<void>(`/permissions/${permissionId}`, {
+      method: "DELETE",
+    }),
+
+  updateRole: (
+    roleId: number,
+    data: {
+      name?: string
+      description?: string | null
+    }
+  ) =>
+    apiFetch<Role>(`/roles/${roleId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  deleteRole: (roleId: number) =>
+    apiFetch<void>(`/roles/${roleId}`, {
+      method: "DELETE",
+    }),
 }
 
 // ── User Meta API ─────────────────────────────────────────────────────────────
 
 export const userMetaApi = {
+  getAdminMeta: (id: number) => apiFetch<any>(`/users/${id}/meta/admin`).catch(() => null),
+  updateAdminMeta: (id: number, data: any) => apiFetch<any>(`/users/${id}/meta/admin`, { method: "PATCH", body: JSON.stringify(data) }),
   getStudentMeta: (userId: number) => apiFetch<any>(`/users/${userId}/meta/student`).catch(() => null),
   updateStudentMeta: (userId: number, data: any) => apiFetch<any>(`/users/${userId}/meta/student`, { method: "PATCH", body: JSON.stringify(data) }),
 
@@ -110,28 +222,39 @@ export const userMetaApi = {
 // ── Accounting API ────────────────────────────────────────────────────────────
 
 export const accountingApi = {
+  getDailyStatement: (institutionId: number, day: string) =>
+    apiFetch<import("@/types/accounting").DailyStatement>(`/accounting/statements/institution/${institutionId}/daily?${new URLSearchParams({ day })}`),
+  getStatement: (institutionId: number, startDate: string, endDate: string) =>
+    apiFetch<AccountStatement>(`/accounting/statements/institution/${institutionId}?${new URLSearchParams({ start_date: startDate, end_date: endDate })}`),
+  getAccounts: () => apiFetch<Account[]>("/accounting/accounts"),
   // Accounts
   getInvoiceCategories: () => apiFetch<InvoiceCategory[]>("/accounting/invoice-categories"),
   createInvoiceCategory: (data: { name: string; created_by: number }) =>
     apiFetch<Account>("/accounting/invoice-categories", { method: "POST", body: JSON.stringify(data) }),
 
   getExpenseCategories: () => apiFetch<ExpenseCategory[]>("/accounting/expense-categories"),
-  createExpenseCategory: (data: { name: string; code: string; account_type: string; description?: string | null }) =>
-    apiFetch<Account>("/accounting/expense-categories", { method: "POST", body: JSON.stringify(data) }),
+  createExpenseCategory: (data: { name: string; code: string; is_active?: boolean }) =>
+    apiFetch<ExpenseCategory>("/accounting/expense-categories", { method: "POST", body: JSON.stringify(data) }),
 
   // Invoices
-  getInvoices:        ()           => apiFetch<Invoice[]>("/accounting/invoices"),
+  // getInvoices:        ()           => apiFetch<Invoice[]>("/accounting/invoices"),
+  getInvoices: (institutionId: number) => apiFetch<Invoice[]>(`/accounting/invoices?institution_id=${institutionId}`),
   getInvoicesByInstitution: (institutionId: number) => apiFetch<Invoice[]>(`/accounting/invoices/institution/${institutionId}`),
+  updateInvoice: (id: number, data: InvoiceUpdate) => apiFetch<Invoice>(`/accounting/invoices/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  receiveDonation: (data: unknown) => apiFetch<Receipt>("/accounting/donations", { method: "POST", body: JSON.stringify(data) }),
+  getInvoiceItemBalances: (id: number) => apiFetch<{ legacy_estimate: boolean; items: { invoice_item_id: number; category: string; description: string; outstanding: number | string }[] }>(`/accounting/invoices/${id}/item-balances`),
   getInvoice:         (id: number) => apiFetch<Invoice>(`/accounting/invoices/${id}`),
-  getUserInvoices:    (userId: number) => apiFetch<Invoice[]>(`/accounting/invoices/user/${userId}`),
-  getInvoicesByStatus:(status: string) => apiFetch<Invoice[]>(`/accounting/invoices/status/${status}`),
+  // getUserInvoices:    (userId: number) => apiFetch<Invoice[]>(`/accounting/invoices/user/${userId}`),
+  getUserInvoices: (userId: number, institutionId: number) => apiFetch<Invoice[]>(`/accounting/invoices/user/${userId}?institution_id=${institutionId}`),
+  // getInvoicesByStatus:(status: string) => apiFetch<Invoice[]>(`/accounting/invoices/status/${status}`),
+  getInvoicesByStatus: (status: string, institutionId: number) => apiFetch<Invoice[]>(`/accounting/invoices/status/${encodeURIComponent(status)}?institution_id=${institutionId}`),
   createInvoice:      (data: any)  => apiFetch<Invoice>("/accounting/invoices", { method: "POST", body: JSON.stringify(data) }),
   cancelInvoice:      (id: number, reason: string) =>
     apiFetch<Invoice>(`/accounting/invoices/${id}/cancel`, { method: "POST", body: JSON.stringify({ reason }) }),
 
   // Receipts (payments against invoices)
   getReceipts:        ()           => apiFetch<Receipt[]>("/accounting/receipts"),
-  getReceiptsByInstitution: (institutionId: number) => apiFetch<Receipt[]>(`/accounting/receipts/institution/${institutionId}`),
+  getReceiptsByInstitution: (institutionId: number, skip = 0, limit = 100) => apiFetch<Receipt[]>(`/accounting/receipts/institution/${institutionId}?skip=${skip}&limit=${limit}`),
   getReceipt:         (id: number) => apiFetch<Receipt>(`/accounting/receipts/${id}`),
   getInvoiceReceipts: (invoiceId: number) => apiFetch<Receipt[]>(`/accounting/receipts/invoice/${invoiceId}`),
   getUserReceipts:    (userId: number)    => apiFetch<Receipt[]>(`/accounting/receipts/user/${userId}`),
@@ -141,9 +264,10 @@ export const accountingApi = {
   
   // Expenses
   getExpenses:              ()           => apiFetch<Expense[]>("/accounting/expenses"),
-  getExpensesByInstitution: (institutionId: number) => apiFetch<Expense[]>(`/accounting/expenses/institution/${institutionId}`),
+  getExpensesByInstitution: (institutionId: number) => apiFetch<ExpenseRecord[]>(`/accounting/expenses/institution/${institutionId}`),
   getExpense:               (id: number) => apiFetch<Expense>(`/accounting/expenses/${id}`),
-  createExpense:            (data: any)  => apiFetch<Expense>("/accounting/expenses", { method: "POST", body: JSON.stringify(data) }),
+  updateExpense: (id: number, data: ExpenseCreate) => apiFetch<Expense>(`/accounting/expenses/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  createExpense:            (data: ExpenseCreate)  => apiFetch<Expense>("/accounting/expenses", { method: "POST", body: JSON.stringify(data) }),
   cancelExpense:            (id: number, reason: string) =>
     apiFetch<Expense>(`/accounting/expenses/${id}/cancel`, { method: "POST", body: JSON.stringify({ cancellation_reason: reason }) }),
 }

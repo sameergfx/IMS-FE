@@ -10,12 +10,12 @@ export interface PartyInfo {
   refNumber: string | null
 }
 
-export function useParty(userId: number | null): { party: PartyInfo | null; loading: boolean } {
+export function useParty(userId: number | null, suppliedUser?: UserResponse): { party: PartyInfo | null; loading: boolean } {
   const [party,   setParty]   = useState<PartyInfo | null>(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!userId) return
+    if (!userId || suppliedUser) return
     setLoading(true)
 
     usersApi.getUser(userId)
@@ -28,7 +28,14 @@ export function useParty(userId: number | null): { party: PartyInfo | null; load
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [userId])
+  }, [userId, suppliedUser])
+
+  if (suppliedUser) {
+    return {
+      party: { user: suppliedUser, refLabel: suppliedUser.ref_label ?? "Ref No", refNumber: suppliedUser.ref_number ?? null },
+      loading: false,
+    }
+  }
 
   return { party, loading }
 }

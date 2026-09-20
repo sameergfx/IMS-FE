@@ -5,12 +5,15 @@ import { useParams, useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { institutionsApi } from "@/lib/api"
 import { Institution } from "@/types/institution"
+import { usePermissions } from "@/lib/permissions-context"
+import { InstitutionPageGuard } from "@/components/access/PermissionGate"
 import InstitutionSidebar from "@/components/layout/InstitutionSidebar"
 import styles from "./layout.module.css"
 
 export default function InstitutionLayout({ children }: { children: React.ReactNode }) {
   const { id } = useParams()
   const router = useRouter()
+  const { temporaryAccess } = usePermissions()
   const { user, loading: authLoading, selectInstitution } = useAuth()
   const [institution, setInstitution] = useState<Institution | null>(null)
   const [loading,     setLoading]     = useState(true)
@@ -39,7 +42,9 @@ export default function InstitutionLayout({ children }: { children: React.ReactN
   return (
     <div className={styles.shell}>
       <InstitutionSidebar institution={institution} user={user} />
-      <main className={styles.main}>{children}</main>
+      <main className={styles.main}>
+        {temporaryAccess.map(grant => <p key={`${grant.permission_code}-${grant.expires_at}`} role="status" style={{ background: "#fffbeb", padding: ".75rem", marginBottom: ".5rem" }}>Temporary {grant.permission_code === "students.create" ? "add student" : "edit student"} access until {new Date(grant.expires_at).toLocaleString()}</p>)}
+        <InstitutionPageGuard>{children}</InstitutionPageGuard></main>
     </div>
   )
 }

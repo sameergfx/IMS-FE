@@ -1,4 +1,5 @@
 "use client"
+import PermissionGate from "@/components/access/PermissionGate"
 
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
@@ -7,9 +8,11 @@ import { accountingApi } from "@/lib/api"
 import { Invoice } from "@/types/accounting"
 import PartyBadge from "@/components/ui/PartyBadge"
 import styles from "./page.module.css"
+import { usePermissions } from "@/lib/permissions-context"
 
 export default function InvoicesPage() {
   const { id } = useParams()
+  const { hasPermission } = usePermissions()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading,  setLoading]  = useState(true)
   const [search,   setSearch]   = useState("")
@@ -38,9 +41,11 @@ export default function InvoicesPage() {
           <h1 className={styles.title}>Invoices</h1>
           <p className={styles.sub}>{invoices.length} total invoices</p>
         </div>
-        <Link href={`/dashboard/institution/${id}/accounts/invoices/create`} className={styles.createBtn}>
-          + Create Invoice
-        </Link>
+        {hasPermission("create_invoice") && (
+          <PermissionGate action="invoices.create"><Link href={`/dashboard/institution/${id}/accounts/invoices/create`} className={styles.createBtn}>
+            + Create Invoice
+          </Link></PermissionGate>
+        )}
       </div>
 
       <div className={styles.toolbar}>
@@ -62,9 +67,9 @@ export default function InvoicesPage() {
       ) : filtered.length === 0 ? (
         <div className={styles.state}>
           No invoices found.
-          <Link href={`/dashboard/institution/${id}/accounts/invoices/create`} className={styles.createBtn}>
+          <PermissionGate action="invoices.create"><Link href={`/dashboard/institution/${id}/accounts/invoices/create`} className={styles.createBtn}>
             + Create Invoice
-          </Link>
+          </Link></PermissionGate>
         </div>
       ) : (
         <div className={styles.tableWrap}>
@@ -100,9 +105,9 @@ export default function InvoicesPage() {
                     </span>
                   </td>
                   <td>
-                    <Link href={`/dashboard/institution/${id}/accounts/invoices/${inv.id}`} className={styles.viewBtn}>
+                    <PermissionGate action="invoices.read"><Link href={`/dashboard/institution/${id}/accounts/invoices/${inv.id}`} className={styles.viewBtn}>
                       View →
-                    </Link>
+                    </Link></PermissionGate>
                   </td>
                 </tr>
               ))}

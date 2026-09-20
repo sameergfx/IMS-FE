@@ -1,4 +1,5 @@
 "use client"
+import PermissionGate from "@/components/access/PermissionGate"
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -48,7 +49,7 @@ export default function ReceiptDetailPage() {
         <div className={styles.actions}>
           <button className={styles.printBtn} onClick={() => window.print()}>🖨 Print</button>
           {receipt.status === "active" && (
-            <button className={styles.cancelBtn} onClick={() => setShowCancel(true)}>Cancel Receipt</button>
+            <PermissionGate action="receipts.cancel"><button className={styles.cancelBtn} onClick={() => setShowCancel(true)}>Cancel Receipt</button></PermissionGate>
           )}
         </div>
       </div>
@@ -79,9 +80,9 @@ export default function ReceiptDetailPage() {
               <span>Total: ₹{Number(invoice.total_amount).toLocaleString()}</span>
               <span>Balance: ₹{Number(invoice.balance_due).toLocaleString()}</span>
             </div>
-            <Link href={`/dashboard/institution/${id}/accounts/invoices/${invoice.id}`} className={styles.invViewBtn}>
+            <PermissionGate action="invoices.read"><Link href={`/dashboard/institution/${id}/accounts/invoices/${invoice.id}`} className={styles.invViewBtn}>
               View Invoice →
-            </Link>
+            </Link></PermissionGate>
           </div>
         )}
 
@@ -98,9 +99,9 @@ export default function ReceiptDetailPage() {
             <textarea className={styles.textarea} placeholder="Reason for cancellation..." value={reason} onChange={e => setReason(e.target.value)} rows={3} />
             <div className={styles.modalActions}>
               <button className={styles.modalBack} onClick={() => setShowCancel(false)}>Back</button>
-              <button className={styles.modalConfirm} onClick={handleCancel} disabled={cancelling || !reason.trim()}>
+              <PermissionGate action="receipts.cancel"><button className={styles.modalConfirm} onClick={handleCancel} disabled={cancelling || !reason.trim()}>
                 {cancelling ? "Cancelling..." : "Confirm Cancel"}
-              </button>
+              </button></PermissionGate>
             </div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { usersApi, userMetaApi } from "@/lib/api"
+import UserPhotoField from "@/components/ui/UserPhotoField"
 import PartyBadge from "@/components/ui/PartyBadge"
 import styles from "./profile.module.css"
 
@@ -11,6 +12,11 @@ export default function MyProfilePage() {
   const router = useRouter()
   const { user, refreshUser } = useAuth()
 
+  const [photo, setPhoto] = useState<string | null>(null)
+  const [photoUploading, setPhotoUploading] = useState(false)
+  const [savingPhoto, setSavingPhoto] = useState(false)
+  const [photoMessage, setPhotoMessage] = useState("")
+  const [photoError, setPhotoError] = useState("")
   const [loading,  setLoading]  = useState(true)
   const [saving,   setSaving]   = useState(false)
   const [error,    setError]    = useState("")
@@ -44,6 +50,8 @@ export default function MyProfilePage() {
       } else if (user.user_type === "member") {
         m = await userMetaApi.getMemberMeta(user.id)
       }
+      if (user.user_type === "admin") m = await userMetaApi.getAdminMeta(user.id)
+      setPhoto(m?.profile_photo || null)
       setMetaForm(m || {})
       setLoading(false)
     }
@@ -52,6 +60,17 @@ export default function MyProfilePage() {
 
   const setField = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
   const setMetaField = (k: string, v: string) => setMetaForm((f: any) => ({ ...f, [k]: v }))
+
+  const savePhoto = async () => {
+    if (photoUploading || savingPhoto || saving) return
+    setSavingPhoto(true); setPhotoMessage(""); setPhotoError("")
+    try {
+      const result = await usersApi.saveMyPhoto(photo)
+      setMetaForm((current: any) => ({ ...current, profile_photo: result.profile_photo }))
+      setPhotoMessage("Profile photo saved.")
+    } catch (err) { setPhotoError(err instanceof Error ? err.message : "Could not save photo") }
+    finally { setSavingPhoto(false) }
+  }
 
   const handleSave = async () => {
     if (!user) return
@@ -97,6 +116,15 @@ export default function MyProfilePage() {
         <button className={styles.backBtn} onClick={() => router.back()}>← Back</button>
         <h1 className={styles.title}>My Profile</h1>
         <p className={styles.sub}>Manage your personal information</p>
+      </div>
+
+      <div className={styles.card}>
+        <h2 className={styles.cardTitle}>Profile Photo</h2>
+        <UserPhotoField value={photo} onChange={value => { setPhoto(value); setPhotoMessage("") }} onBusyChange={setPhotoUploading}
+          uploadPhoto={usersApi.uploadMyPhoto} disabled={saving || savingPhoto} />
+        <button type="button" className={styles.saveBtn} onClick={savePhoto} disabled={photoUploading || savingPhoto || saving}>{savingPhoto ? "Saving…" : "Save Photo"}</button>
+        {photoMessage && <p role="status">{photoMessage}</p>}
+        {photoError && <p className={styles.error} role="alert">{photoError}</p>}
       </div>
 
       <div className={styles.card}>
@@ -234,7 +262,7 @@ export default function MyProfilePage() {
 
       <div className={styles.actions}>
         <button className={styles.cancelBtn} onClick={() => router.back()}>Cancel</button>
-        <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
+        <button className={styles.saveBtn} onClick={handleSave} disabled={saving || savingPhoto || photoUploading}>
           {saving ? "Saving..." : "Save Changes"}
         </button>
       </div>

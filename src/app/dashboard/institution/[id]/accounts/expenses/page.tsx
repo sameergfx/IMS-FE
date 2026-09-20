@@ -1,36 +1,41 @@
 "use client"
+import PermissionGate from "@/components/access/PermissionGate"
 
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { accountingApi } from "@/lib/api"
-import { Expense, Account } from "@/types/accounting"
+import { ExpenseRecord } from "@/types/accounting"
 import styles from "./page.module.css"
 
 export default function ExpensesPage() {
   const { id } = useParams()
-  const [expenses, setExpenses] = useState<Expense[]>([])
-  const [accounts, setAccounts] = useState<Account[]>([])
+  const [expenses, setExpenses] = useState<ExpenseRecord[]>([])
   const [loading,  setLoading]  = useState(true)
   const [search,   setSearch]   = useState("")
-  const [filter,   setFilter]   = useState("all")
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    accountingApi.getExpensesByInstitution(Number(id)).then(setExpenses).finally(() => setLoading(false))
-    accountingApi.getAccounts().then(setAccounts).catch(() => {})
+    let active = true
+    setLoading(true)
+    setError(null)
+    setExpenses([])
+    accountingApi.getExpensesByInstitution(Number(id))
+      .then(data => { if (active) setExpenses(data) })
+      .catch(err => { if (active) setError(err instanceof Error ? err.message : "Failed to load expenses") })
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
   }, [id])
 
-  const accountName = (accountId: number) => accounts.find(a => a.id === accountId)?.name ?? "—"
 
-  const filtered = expenses.filter(exp => {
-    const matchSearch = exp.expense_number.toLowerCase().includes(search.toLowerCase()) ||
-      exp.paid_to.toLowerCase().includes(search.toLowerCase()) ||
-      (exp.description ?? "").toLowerCase().includes(search.toLowerCase())
-    const matchFilter = filter === "all" || exp.status === filter
-    return matchSearch && matchFilter
-  })
+  const filtered = expenses.filter(exp =>
+    exp.expense_number.toLowerCase().includes(search.toLowerCase()) ||
+    (exp.category?.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
+    (exp.description ?? "").toLowerCase().includes(search.toLowerCase()) ||
+    exp.items.some(item => `${item.category?.name ?? ""} ${item.description}`.toLowerCase().includes(search.toLowerCase()))
+  )
 
-  const total = filtered.reduce((s, e) => s + (e.status === "active" ? Number(e.amount) : 0), 0)
+  const total = filtered.filter(expense => expense.status !== "cancelled").reduce((sum, expense) => sum + Number(expense.total_amount), 0)
 
   return (
     <div className={styles.page}>
@@ -39,33 +44,27 @@ export default function ExpensesPage() {
           <h1 className={styles.title}>Expenses</h1>
           <p className={styles.sub}>{expenses.length} total expenses</p>
         </div>
-        <Link href={`/dashboard/institution/${id}/accounts/expenses/create`} className={styles.createBtn}>
+        <PermissionGate action="expenses.create"><Link href={`/dashboard/institution/${id}/accounts/expenses/create`} className={styles.createBtn}>
           + Record Expense
-        </Link>
+        </Link></PermissionGate>
       </div>
 
       <div className={styles.toolbar}>
         <input className={styles.search} placeholder="Search expenses..."
           value={search} onChange={e => setSearch(e.target.value)} />
-        <div className={styles.filters}>
-          {["all", "active", "cancelled"].map(f => (
-            <button key={f}
-              className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ""}`}
-              onClick={() => setFilter(f)}>
-              {f === "all" ? "All" : f}
-            </button>
-          ))}
-        </div>
+
       </div>
 
       {loading ? (
         <div className={styles.state}>Loading expenses...</div>
+      ) : error ? (
+        <div className={styles.state} role="alert">{error}</div>
       ) : filtered.length === 0 ? (
         <div className={styles.state}>
           No expenses found.
-          <Link href={`/dashboard/institution/${id}/accounts/expenses/create`} className={styles.createBtn}>
+          <PermissionGate action="expenses.create"><Link href={`/dashboard/institution/${id}/accounts/expenses/create`} className={styles.createBtn}>
             + Record Expense
-          </Link>
+          </Link></PermissionGate>
         </div>
       ) : (
         <>
@@ -74,12 +73,11 @@ export default function ExpensesPage() {
               <thead>
                 <tr>
                   <th>Expense No</th>
-                  <th>Category</th>
                   <th>Paid To</th>
+                  <th>Category</th>
+                  <th>Description</th>
                   <th>Date</th>
-                  <th>Method</th>
                   <th>Amount</th>
-                  <th>Status</th>
                   <th></th>
                 </tr>
               </thead>
@@ -87,20 +85,15 @@ export default function ExpensesPage() {
                 {filtered.map(exp => (
                   <tr key={exp.id}>
                     <td><span className={styles.expNo}>{exp.expense_number}</span></td>
-                    <td>{accountName(exp.account_id)}</td>
-                    <td className={styles.desc}>{exp.paid_to}</td>
+                    <td>{exp.paid_to || "—"}</td>
+                    <td>{exp.items.length ? [...new Set(exp.items.map(item => item.category?.name || "Uncategorized"))].join(", ") : exp.category?.name ?? "—"}</td>
+                    <td className={styles.desc}>{exp.description || exp.items.map(item => item.description).join(", ")}</td>
                     <td>{new Date(exp.expense_date).toLocaleDateString()}</td>
-                    <td className={styles.method}>{exp.payment_method.replace("_", " ")}</td>
-                    <td className={styles.amount}>₹{Number(exp.amount).toLocaleString()}</td>
+                    <td className={styles.amount}>₹{Number(exp.total_amount).toLocaleString()}</td>
                     <td>
-                      <span className={`${styles.status} ${exp.status === "active" ? styles.statusActive : styles.statusCancelled}`}>
-                        {exp.status}
-                      </span>
-                    </td>
-                    <td>
-                      <Link href={`/dashboard/institution/${id}/accounts/expenses/${exp.id}`} className={styles.viewBtn}>
+                      <PermissionGate action="expenses.read"><Link href={`/dashboard/institution/${id}/accounts/expenses/${exp.id}`} className={styles.viewBtn}>
                         View →
-                      </Link>
+                      </Link></PermissionGate>
                     </td>
                   </tr>
                 ))}
@@ -108,7 +101,7 @@ export default function ExpensesPage() {
             </table>
           </div>
           <div className={styles.totalBar}>
-            <span>Total (active)</span>
+            <span>Total</span>
             <span className={styles.totalValue}>₹{total.toLocaleString()}</span>
           </div>
         </>

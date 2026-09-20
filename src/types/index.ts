@@ -1,5 +1,26 @@
 export type UserType = "student" | "teacher" | "staff" | "member" | "admin"
 
+export interface InstitutionAccess {
+  id:               number
+  institution_id:   number
+  institution_name: string
+  role:             UserType
+  is_active:        boolean
+}
+
+export interface Permission {
+  id:          number
+  code:        string
+  description: string | null
+}
+
+export interface Role {
+  id:          number
+  name:        string
+  description: string | null
+  permissions: Permission[]
+}
+
 export interface TokenResponse {
   access_token:  string
   refresh_token: string

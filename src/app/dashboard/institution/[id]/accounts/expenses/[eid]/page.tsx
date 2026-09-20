@@ -1,17 +1,18 @@
 "use client"
+import PermissionGate from "@/components/access/PermissionGate"
 
+import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { accountingApi } from "@/lib/api"
-import { Expense, Account } from "@/types/accounting"
+import { Expense } from "@/types/accounting"
 import styles from "./detail.module.css"
 
 export default function ExpenseDetailPage() {
-  const { eid } = useParams()
+  const { id, eid } = useParams()
   const router = useRouter()
 
   const [expense,   setExpense]   = useState<Expense | null>(null)
-  const [account,   setAccount]   = useState<Account | null>(null)
   const [loading,   setLoading]   = useState(true)
   const [showCancel, setShowCancel] = useState(false)
   const [reason,     setReason]     = useState("")
@@ -20,10 +21,7 @@ export default function ExpenseDetailPage() {
   const load = () => {
     accountingApi.getExpense(Number(eid)).then(exp => {
       setExpense(exp)
-      accountingApi.getAccounts().then(accounts => {
-        setAccount(accounts.find(a => a.id === exp.account_id) ?? null)
-      }).catch(() => {})
-    }).finally(() => setLoading(false))
+    }).catch(() => setExpense(null)).finally(() => setLoading(false))
   }
 
   useEffect(() => { load() }, [eid])
@@ -56,7 +54,8 @@ export default function ExpenseDetailPage() {
         </div>
         {expense.status === "active" && (
           <div className={styles.actions}>
-            <button className={styles.cancelBtn} onClick={() => setShowCancel(true)}>Cancel Expense</button>
+            <PermissionGate action="expenses.update"><Link href={`/dashboard/institution/${id}/accounts/expenses/${eid}/edit`} className={styles.editBtn}>Edit Expense</Link></PermissionGate>
+            <PermissionGate action="expenses.cancel"><button className={styles.cancelBtn} onClick={() => setShowCancel(true)}>Cancel Expense</button></PermissionGate>
           </div>
         )}
       </div>
@@ -68,18 +67,23 @@ export default function ExpenseDetailPage() {
         </div>
 
         <div className={styles.metaGrid}>
-          <div className={styles.metaItem}><span className={styles.metaLabel}>Category</span><span className={styles.metaValue}>{account?.name ?? "—"}</span></div>
+          <div className={styles.metaItem}><span className={styles.metaLabel}>Category</span><span className={styles.metaValue}>{expense.items.length ? [...new Set(expense.items.map(item => item.category?.name || "Uncategorized"))].join(", ") : expense.category?.name ?? "—"}</span></div>
           <div className={styles.metaItem}><span className={styles.metaLabel}>Date</span><span className={styles.metaValue}>{new Date(expense.expense_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</span></div>
-          <div className={styles.metaItem}><span className={styles.metaLabel}>Payment Method</span><span className={styles.metaValue}>{expense.payment_method.replace("_", " ").toUpperCase()}</span></div>
+          <div className={styles.metaItem}><span className={styles.metaLabel}>Payment Method</span><span className={styles.metaValue}>{expense.payment_method?.replace("_", " ").toUpperCase() ?? "—"}</span></div>
           {expense.reference_number && <div className={styles.metaItem}><span className={styles.metaLabel}>Reference No</span><span className={styles.metaValue}>{expense.reference_number}</span></div>}
           {expense.bank_name && <div className={styles.metaItem}><span className={styles.metaLabel}>Bank</span><span className={styles.metaValue}>{expense.bank_name}</span></div>}
           {expense.description && <div className={styles.metaItem} style={{ gridColumn: "1/-1" }}><span className={styles.metaLabel}>Description</span><span className={styles.metaValue}>{expense.description}</span></div>}
           {expense.notes && <div className={styles.metaItem} style={{ gridColumn: "1/-1" }}><span className={styles.metaLabel}>Notes</span><span className={styles.metaValue}>{expense.notes}</span></div>}
         </div>
 
+        {expense.items.length > 0 && <div style={{ overflowX: "auto" }}><table className={styles.itemsTable}>
+          <thead><tr><th>#</th><th>Category</th><th>Description</th><th>Amount</th><th>Discount</th><th>Net</th></tr></thead>
+          <tbody>{expense.items.map((item, index) => <tr key={item.id}><td>{index + 1}</td><td>{item.category?.name ?? "—"}</td><td>{item.description}</td><td>₹{Number(item.amount).toFixed(2)}</td><td>₹{Number(item.discount).toFixed(2)}</td><td>₹{Number(item.net_amount).toFixed(2)}</td></tr>)}</tbody>
+        </table></div>}
+
         <div className={styles.amountPaid}>
           <span>Amount</span>
-          <span className={styles.amountValue}>₹{Number(expense.amount).toLocaleString()}</span>
+          <span className={styles.amountValue}>₹{Number(expense.total_amount).toLocaleString()}</span>
         </div>
 
         {expense.cancellation_reason && (
@@ -95,9 +99,9 @@ export default function ExpenseDetailPage() {
             <textarea className={styles.textarea} placeholder="Reason for cancellation..." value={reason} onChange={e => setReason(e.target.value)} rows={3} />
             <div className={styles.modalActions}>
               <button className={styles.modalBack} onClick={() => setShowCancel(false)}>Back</button>
-              <button className={styles.modalConfirm} onClick={handleCancel} disabled={cancelling || !reason.trim()}>
+              <PermissionGate action="expenses.cancel"><button className={styles.modalConfirm} onClick={handleCancel} disabled={cancelling || !reason.trim()}>
                 {cancelling ? "Cancelling..." : "Confirm Cancel"}
-              </button>
+              </button></PermissionGate>
             </div>
           </div>
         </div>

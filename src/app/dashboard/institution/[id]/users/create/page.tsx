@@ -1,7 +1,11 @@
 "use client"
+import { usePermissions } from "@/lib/permissions-context"
+import UserPhotoField from "@/components/ui/UserPhotoField"
 
 import { useState } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
+import { institutionUserTypes } from "@/lib/institution-types"
 import { usersApi } from "@/lib/api"
 import { metaApi } from "@/lib/metaApi"
 import { UserType } from "@/types"
@@ -97,7 +101,7 @@ function TeacherMetaForm({ data, onChange }: { data: any; onChange: (k: string, 
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>🏫 Employment Info</h3>
         <div className={styles.grid3}>
-          {f("Employee ID *", "employee_id", "text", "e.g. TCH-001")}
+          <p>Employee ID is generated automatically when the user is created.</p>
           {f("Department", "department", "text", "e.g. Mathematics")}
           {f("Specialization", "specialization", "text", "e.g. Algebra")}
           {f("Qualification", "qualification", "text", "e.g. M.Sc., B.Ed.")}
@@ -148,7 +152,7 @@ function StaffMetaForm({ data, onChange }: { data: any; onChange: (k: string, v:
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>🏢 Staff Details</h3>
         <div className={styles.grid3}>
-          {f("Employee ID *", "employee_id", "text", "e.g. STF-001")}
+          <p>Employee ID is generated automatically when the user is created.</p>
           {f("Designation", "designation", "text", "e.g. Office Assistant")}
           {f("Department", "department", "text", "e.g. Administration")}
           {sel("Staff Type", "staff_type", STAFF_TYPES)}
@@ -271,7 +275,7 @@ function AdminMetaForm({ data, onChange }: { data: any; onChange: (k: string, v:
 const USER_TYPE_OPTIONS: { type: UserType; label: string; icon: string; desc: string; color: string }[] = [
   { type: "student", label: "Student",  icon: "🎓", desc: "Enrolled learner",      color: "#3b82f6" },
   { type: "teacher", label: "Teacher",  icon: "👩‍🏫", desc: "Faculty member",         color: "#8b5cf6" },
-  { type: "staff",   label: "Staff",    icon: "🏢", desc: "Non-teaching staff",     color: "#f59e0b" },
+  { type: "staff",   label: "Staff",    icon: "🏢", desc: "Institution staff",     color: "#f59e0b" },
   { type: "member",  label: "Member",   icon: "🪪", desc: "Association member",     color: "#10b981" },
   { type: "admin",   label: "Admin",    icon: "⚙️", desc: "System administrator",   color: "#ef4444" },
 ]
@@ -281,6 +285,9 @@ const USER_TYPE_OPTIONS: { type: UserType; label: string; icon: string; desc: st
 export default function CreateUserPage() {
   const { id } = useParams()
   const router  = useRouter()
+  const { selectedInstitution } = useAuth()
+  const { isSuperadmin, hasPermission } = usePermissions()
+  const allowedTypes = isSuperadmin ? [...institutionUserTypes(selectedInstitution?.institution_type), "admin"] : hasPermission("students.create") ? ["student"] : []
 
   const [step,       setStep]       = useState(0)
   const [submitting, setSubmitting] = useState(false)
@@ -312,6 +319,7 @@ export default function CreateUserPage() {
     if (basic.password.length < 6){ setError("Password must be ≥ 6 characters"); return false }
     if (basic.password !== basic.confirm) { setError("Passwords do not match"); return false }
     if (!basic.user_type)         { setError("Please select a user type");      return false }
+    if (!allowedTypes.includes(basic.user_type)) { setError("This user type is not available for the institution"); return false }
     return true
   }
 
@@ -322,9 +330,12 @@ export default function CreateUserPage() {
 
   // ── Submit ────────────────────────────────────────────────────────────────
 
+  const [photoUploading, setPhotoUploading] = useState(false)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    if (photoUploading || submitting || !step1Valid()) return
     setSubmitting(true)
 
     try {
@@ -368,8 +379,6 @@ export default function CreateUserPage() {
 
   const metaRequired = (type: UserType | "") => {
     if (type === "student") return "admission_number"
-    if (type === "teacher") return "employee_id"
-    if (type === "staff")   return "employee_id"
     if (type === "member")  return "membership_number"
     return null
   }
@@ -447,7 +456,7 @@ export default function CreateUserPage() {
             <h3 className={styles.sectionTitle}>🏷️ User Type *</h3>
             <p className={styles.typeHint}>The type determines what profile fields appear in the next step.</p>
             <div className={styles.typeGrid}>
-              {USER_TYPE_OPTIONS.map(opt => (
+              {USER_TYPE_OPTIONS.filter(opt => allowedTypes.includes(opt.type)).map(opt => (
                 <button
                   id={`type_${opt.type}`}
                   key={opt.type}
@@ -490,6 +499,7 @@ export default function CreateUserPage() {
       {/* ── STEP 2: Meta form ── */}
       {step === 1 && (
         <form onSubmit={handleSubmit}>
+          <UserPhotoField value={meta.profile_photo} onChange={url => setMetaField("profile_photo", url || "")} onBusyChange={setPhotoUploading} disabled={photoUploading || submitting} />
           <div className={styles.card}>
             <div className={styles.cardTitleRow}>
               <h2 className={styles.cardTitle}>
@@ -517,7 +527,7 @@ export default function CreateUserPage() {
 
             <div className={styles.actions}>
               <button type="button" className={styles.cancelBtn} onClick={() => setStep(0)}>← Back</button>
-              <button type="button" className={styles.skipBtn} disabled={submitting}
+              <button type="button" className={styles.skipBtn} disabled={photoUploading || submitting}
                 onClick={async () => {
                   setError("")
                   setSubmitting(true)
@@ -540,7 +550,7 @@ export default function CreateUserPage() {
               >
                 {submitting ? "Saving..." : "Skip & Save"}
               </button>
-              <button type="submit" id="create_user_btn" className={styles.submitBtn} disabled={submitting}>
+              <button type="submit" id="create_user_btn" className={styles.submitBtn} disabled={photoUploading || submitting}>
                 {submitting ? "Creating..." : "✓ Create User"}
               </button>
             </div>

@@ -7,7 +7,8 @@ import { Institution } from "@/types/institution"
 import styles from "./page.module.css"
 
 export default function DashboardPage() {
-  const { user, selectInstitution } = useAuth()
+  const { user, selectInstitution, logout } = useAuth()
+  const canManageInstitutions = user?.user_type === "admin"
   const [institutions, setInstitutions] = useState<Institution[]>([])
   const [loading,      setLoading]      = useState(true)
   const [search,       setSearch]       = useState("")
@@ -16,7 +17,7 @@ export default function DashboardPage() {
   const [error,        setError]        = useState("")
 
   const [form, setForm] = useState({
-    name: "", place: "", address: "", phone: "", email: "",
+    institution_type: "educational", name: "", short_name: "", place: "", address: "", phone: "", email: "",
     bank_name: "", bank_branch: "", account_name: "", account_number: "", ifsc_code: "",
   })
 
@@ -35,12 +36,14 @@ export default function DashboardPage() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!canManageInstitutions) return
     if (!form.name.trim()) { setError("Name is required"); return }
     setSubmitting(true)
     setError("")
     try {
       const inst = await institutionsApi.create({
         ...form,
+        short_name: form.short_name.trim() || null,
         place:          form.place          || null,
         address:        form.address        || null,
         phone:          form.phone          || null,
@@ -53,7 +56,7 @@ export default function DashboardPage() {
       })
       setInstitutions(p => [...p, inst])
       setShowAdd(false)
-      setForm({ name: "", place: "", address: "", phone: "", email: "",
+      setForm({ institution_type: "educational", name: "", short_name: "", place: "", address: "", phone: "", email: "",
         bank_name: "", bank_branch: "", account_name: "", account_number: "", ifsc_code: "" })
     } catch (err: any) {
       setError(err.message || "Failed to create institution")
@@ -74,9 +77,12 @@ export default function DashboardPage() {
           <h1 className={styles.title}>Select Institution</h1>
           <p className={styles.sub}>Choose an institution to manage</p>
         </div>
-        <button className={styles.addBtn} onClick={() => setShowAdd(true)}>
-          + Add Institution
-        </button>
+        <div className={styles.headerActions}>
+          {canManageInstitutions && <button className={styles.addBtn} onClick={() => setShowAdd(true)}>
+            + Add Institution
+          </button>}
+          <button type="button" className={styles.cancelBtn} onClick={logout}>Logout</button>
+        </div>
       </div>
 
       {/* Search */}
@@ -99,7 +105,7 @@ export default function DashboardPage() {
         <div className={styles.empty}>
           <span>🏫</span>
           <p>No institutions found.</p>
-          <button className={styles.addBtn} onClick={() => setShowAdd(true)}>+ Add Institution</button>
+          {canManageInstitutions && <button className={styles.addBtn} onClick={() => setShowAdd(true)}>+ Add Institution</button>}
         </div>
       ) : (
         <div className={styles.grid}>
@@ -115,6 +121,7 @@ export default function DashboardPage() {
               </div>
               <div className={styles.cardBody}>
                 <h2 className={styles.instName}>{inst.name}</h2>
+                <p className={styles.instMeta}>{inst.institution_type === "masjid" ? "Masjid" : "Educational"}</p>
                 {inst.place && <p className={styles.instMeta}>📍 {inst.place}</p>}
                 {inst.phone && <p className={styles.instMeta}>📞 {inst.phone}</p>}
                 {inst.email && <p className={styles.instMeta}>✉ {inst.email}</p>}
@@ -131,7 +138,7 @@ export default function DashboardPage() {
       )}
 
       {/* Add Institution Modal */}
-      {showAdd && (
+      {showAdd && canManageInstitutions && (
         <div className={styles.overlay}>
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
@@ -142,11 +149,24 @@ export default function DashboardPage() {
             <form onSubmit={handleAdd} className={styles.modalForm}>
               <div className={styles.section}>
                 <p className={styles.sectionLabel}>Basic Info</p>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="new-institution-type">Institution type</label>
+                  <select id="new-institution-type" className={styles.input} value={form.institution_type}
+                    onChange={event => setField("institution_type", event.target.value)}>
+                    <option value="educational">Educational — Students, Teachers and Staff</option>
+                    <option value="masjid">Masjid — Members and Staff</option>
+                  </select>
+                </div>
                 <div className={styles.grid2}>
                   <div className={styles.field}>
                     <label className={styles.label}>Name *</label>
                     <input className={styles.input} placeholder="Institution name"
                       value={form.name} onChange={e => setField("name", e.target.value)} required />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Short name</label>
+                    <input className={styles.input} placeholder="e.g. RIIFG" maxLength={20} pattern="[A-Za-z][A-Za-z0-9]{0,19}"
+                      value={form.short_name} onChange={e => setField("short_name", e.target.value.toUpperCase())} />
                   </div>
                   <div className={styles.field}>
                     <label className={styles.label}>Place</label>

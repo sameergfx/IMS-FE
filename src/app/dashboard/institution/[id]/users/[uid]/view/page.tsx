@@ -1,10 +1,12 @@
 "use client"
+import PermissionGate from "@/components/access/PermissionGate"
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { usersApi, userMetaApi } from "@/lib/api"
 import { UserResponse } from "@/types"
+import InstitutionRolePanel from "@/components/access/InstitutionRolePanel"
 import PartyBadge from "@/components/ui/PartyBadge"
 import styles from "./view.module.css"
 
@@ -57,12 +59,13 @@ export default function UserViewPage({ data, onChange }: { data: any; onChange: 
         <button className={styles.backBtn} onClick={() => router.back()}>← Back</button>
         <h1 className={styles.title}>User Profile</h1>
         <div className={styles.actions}>
-          <Link href={`/dashboard/institution/${id}/users/${uid}/edit`} className={styles.editLink}>
+          <PermissionGate action="students.update"><Link href={`/dashboard/institution/${id}/users/${uid}/edit`} className={styles.editLink}>
             Edit
-          </Link>
+          </Link></PermissionGate>
         </div>
       </div>
 
+      <InstitutionRolePanel userId={Number(uid)} institutionId={Number(id)} />
       <div className={styles.card}>
         <h2 className={styles.cardTitle}>User Information</h2>
         <div className={styles.partySection}>

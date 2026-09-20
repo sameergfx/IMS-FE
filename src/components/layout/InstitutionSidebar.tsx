@@ -1,10 +1,13 @@
 "use client"
 
+import { useUiAccess } from "@/components/access/PermissionGate"
+import { routePermission } from "@/lib/ui-permissions"
 import { useState } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
 import { UserResponse } from "@/types"
+import { institutionUserTypes } from "@/lib/institution-types"
 import { Institution } from "@/types/institution"
 import styles from "./InstitutionSidebar.module.css"
 
@@ -16,6 +19,7 @@ const buildNav = (id: number): NavItem[] => [
   { 
     href:  `/dashboard/institution/${id}/users`,    icon: "👥", label: "Users",
     children: [
+      { href: `/dashboard/institution/${id}/users`, label: "All Users" },
       { href: `/dashboard/institution/${id}/users/create`,   label: "Add New"  },
       { href: `/dashboard/institution/${id}/users/student`,   label: "Students"  },
       { href: `/dashboard/institution/${id}/users/teacher`,   label: "Teachers"  },
@@ -27,12 +31,15 @@ const buildNav = (id: number): NavItem[] => [
     icon: "📒", label: "Accounts",
     children: [
       { href: `/dashboard/institution/${id}/accounts/invoices`,   label: "Invoices"   },
+      { href: `/dashboard/institution/${id}/accounts/donations`, label: "Receive Donation" },
       { href: `/dashboard/institution/${id}/accounts/receipts`,   label: "Receipts"   },
       { href: `/dashboard/institution/${id}/accounts/expenses`,   label: "Expenses"   },
+      { href: `/dashboard/institution/${id}/accounts/daily-statement`, label: "Daily Statement" },
       { href: `/dashboard/institution/${id}/accounts/statements`, label: "Statements" },
     ],
   },
   { href: `/dashboard/institution/${id}/settings`, icon: "⚙", label: "Settings"   },
+  { href: `/dashboard/institution/${id}/settings/roles`, icon: "🔐", label: "Roles & Permissions" },
   { href: `/dashboard/institution/${id}/profile`,  icon: "👤", label: "My Profile" },
 ]
 
@@ -42,9 +49,19 @@ export default function InstitutionSidebar({
   institution: Institution
   user: UserResponse
 }) {
+  const { can } = useUiAccess()
   const pathname   = usePathname()
-  const { logout, clearInstitution } = useAuth()
-  const NAV        = buildNav(institution.id)
+  const { logout, clearInstitution, selectedInstitution } = useAuth()
+  const displayedInstitution = selectedInstitution?.id === institution.id ? selectedInstitution : institution
+  const allowedTypes = institutionUserTypes(selectedInstitution?.id === institution.id ? selectedInstitution.institution_type : institution.institution_type)
+  const NAV = buildNav(institution.id).map(item => item.label === "Users" ? {
+    ...item,
+    children: item.children?.filter(child => {
+      const type = child.href.split("/").pop()
+      return type === "users" || type === "create" || allowedTypes.some(allowed => allowed === type)
+    }),
+  } : item).map(item => item.children ? { ...item, children: item.children.filter(child => can(routePermission(child.href) || "access.manage")) } : item)
+    .filter(item => item.children ? item.children.length > 0 : can(routePermission(item.href || "") || "access.manage"))
 
   const [openMenus, setOpenMenus] = useState<string[]>(
     pathname.includes("/accounts/") ? ["Accounts"] : []
@@ -59,14 +76,14 @@ export default function InstitutionSidebar({
       {/* Institution header */}
       <div className={styles.instHeader}>
         <div className={styles.instLogo}>
-          {institution.logo
-            ? <img src={institution.logo} alt="" className={styles.logoImg} />
-            : <span>{institution.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}</span>
+          {displayedInstitution.logo
+            ? <img src={displayedInstitution.logo} alt="" className={styles.logoImg} />
+            : <span>{displayedInstitution.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}</span>
           }
         </div>
         <div className={styles.instInfo}>
-          <p className={styles.instName}>{institution.name}</p>
-          {institution.place && <p className={styles.instPlace}>{institution.place}</p>}
+          <p className={styles.instName}>{displayedInstitution.name}</p>
+          {displayedInstitution.place && <p className={styles.instPlace}>{displayedInstitution.place}</p>}
         </div>
       </div>
 

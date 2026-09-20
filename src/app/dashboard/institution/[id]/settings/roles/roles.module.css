@@ -1,0 +1,160 @@
+.page { max-width: 1000px; }
+.state { padding: 3rem; text-align: center; color: var(--slate); }
+
+.header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap; }
+.title { font-family: var(--font-head); font-size: 1.6rem; font-weight: 700; color: var(--navy); }
+.sub { color: var(--slate); font-size: .875rem; margin-top: .3rem; max-width: 480px; }
+.headerActions { display: flex; gap: .6rem; }
+
+.primaryBtn { background: var(--blue); color: white; border: none; padding: .6rem 1.1rem; border-radius: var(--radius); font-size: .85rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.primaryBtn:hover:not(:disabled) { background: #1d4ed8; }
+.primaryBtn:disabled { opacity: .6; cursor: not-allowed; }
+
+.secondaryBtn { background: white; color: var(--navy); border: 1.5px solid var(--border); padding: .6rem 1.1rem; border-radius: var(--radius); font-size: .85rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.secondaryBtn:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
+
+.error { background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius); padding: .6rem .9rem; color: var(--danger); font-size: .85rem; margin-bottom: 1rem; }
+
+.layout { display: grid; grid-template-columns: 260px 1fr; gap: 1.25rem; align-items: start; }
+
+/* Roles list panel */
+.rolesPanel { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: .6rem; display: flex; flex-direction: column; gap: .3rem; }
+
+.roleItem {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .7rem .9rem; border-radius: 8px; border: none; background: none;
+  cursor: pointer; text-align: left; font-size: .88rem; color: var(--navy);
+  transition: background .15s;
+}
+.roleItem:hover { background: var(--slate-lt); }
+.roleItemActive { background: var(--blue); color: white; }
+.roleItemActive .roleCount { background: rgba(255,255,255,.2); color: white; }
+
+.roleName { font-weight: 600; }
+.roleCount { font-size: .72rem; background: var(--slate-lt); color: var(--slate); padding: .1rem .5rem; border-radius: 999px; }
+
+/* Permissions panel */
+.permsPanel { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.5rem; min-height: 320px; }
+.permsPanelHeader { margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1.5px solid var(--border); }
+.roleTitle { font-family: var(--font-head); font-size: 1.15rem; font-weight: 700; color: var(--navy); }
+.roleDesc { font-size: .85rem; color: var(--slate); margin-top: .25rem; }
+
+.permList { display: flex; flex-direction: column; gap: .3rem; }
+.permRow { display: flex; align-items: flex-start; gap: .75rem; padding: .65rem .5rem; border-radius: 8px; cursor: pointer; }
+.permRow:hover { background: var(--slate-lt); }
+.permRow input { margin-top: .2rem; width: 16px; height: 16px; accent-color: var(--blue); cursor: pointer; }
+
+.permCode { display: block; font-family: var(--font-head); font-size: .88rem; font-weight: 600; color: var(--navy); }
+.permDesc { display: block; font-size: .78rem; color: var(--slate); margin-top: .1rem; }
+
+.empty { color: var(--slate); font-size: .875rem; padding: 1rem .5rem; }
+
+/* Modal */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: grid; place-items: center; z-index: 50; padding: 1rem; }
+.modal { background: white; border-radius: 12px; padding: 1.75rem; width: 100%; max-width: 400px; box-shadow: var(--shadow-lg); }
+.modalTitle { font-family: var(--font-head); font-size: 1.1rem; font-weight: 700; color: var(--navy); margin-bottom: 1.1rem; }
+.modalActions { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1.25rem; }
+
+.field { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1rem; }
+.label { font-size: .8rem; font-weight: 500; color: var(--navy); }
+.input {
+  padding: .55rem .8rem; border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: .88rem; color: var(--navy); outline: none; transition: border-color .15s;
+}
+.input:focus { border-color: var(--blue); }
+.hint { font-size: .74rem; color: var(--slate); }
+
+@media (max-width: 700px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+.permissionItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.permissionItem > label {
+  flex: 1;
+  min-width: 0;
+}
+
+.dangerBtn {
+  padding: 8px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fff1f2;
+  color: #b91c1c;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dangerBtn:hover:not(:disabled) {
+  background: #ffe4e6;
+}
+
+.dangerBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+/* Graphical CRUD matrix */
+.matrixCard { background: #f7f8fa; border: 1px solid #e7e9ef; border-radius: 24px; overflow: hidden; color: #172238; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px 22px; padding: 18px 24px; border-bottom: 1px solid #dce0e8; }
+.legendItem { display: inline-flex; align-items: center; gap: 7px; font-size: .76rem; color: #536176; }
+.create { --action-color: #238447; --action-bg: #d9efdf; --action-border: #65bd80; }
+.read { --action-color: #3065d8; --action-bg: #dee8ff; --action-border: #7ea2f3; }
+.update { --action-color: #966500; --action-bg: #fff1c5; --action-border: #e9b72c; }
+.delete { --action-color: #d93b36; --action-bg: #f9dcda; --action-border: #ee827d; }
+.legendDot, .inactiveDot { width: 10px; height: 10px; border-radius: 50%; background: var(--action-color); flex-shrink: 0; }
+.inactiveDot { background: #aeb5c0; }
+.matrixHeading { padding: 26px 28px 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.matrixHeading .roleDesc { max-width: 540px; }
+.matrixScroll { overflow-x: auto; padding: 12px 24px 26px; }
+.matrix { width: 100%; min-width: 490px; border-spacing: 7px; border-collapse: separate; table-layout: fixed; }
+.matrix th { font-size: .8rem; font-weight: 600; text-align: center; }
+.matrix th:first-child { width: 28%; text-align: right; padding-right: 16px; }
+.matrix thead th { padding-bottom: 10px; }
+.columnTitle { display: block; text-transform: capitalize; }
+.columnHint { display: block; font-size: .62rem; font-weight: 400; text-transform: uppercase; color: #77808f; margin-top: 5px; }
+.moduleName { text-transform: capitalize; overflow-wrap: anywhere; }
+.moduleHeading { color: #77808f; }
+.matrixCell, .unavailable { width: 100%; min-height: 58px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.matrixCell { border: 1.5px solid #dce0e5; cursor: pointer; transition: background .15s, box-shadow .15s; }
+.notGranted { background: #eceef1; color: #aeb5c0; }
+.granted { background: var(--action-bg); border-color: var(--action-border); color: var(--action-color); }
+.cellDot { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700; }
+.granted .cellDot { background: var(--action-color); color: white; }
+.notGranted .cellDot { width: 5px; height: 5px; background: currentColor; }
+.matrixCell[aria-busy="true"] .cellDot { width: 20px; height: 20px; }
+.matrixCell:hover:not(:disabled) { box-shadow: inset 0 0 0 2px currentColor; }
+.matrixCell:focus-visible, .rolePicker select:focus-visible, .managePermissions summary:focus-visible { outline: 3px solid #3065d8; outline-offset: 3px; }
+.matrixCell:disabled { cursor: not-allowed; opacity: .65; }
+.unavailable { color: #9199a6; border: 1px dashed #dce0e5; }
+.matrixNote { text-align: center; font-size: .73rem; color: #647084; margin: 18px 0 0; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 22px 24px; border-top: 1px solid #dce0e8; border-bottom: 1px solid #dce0e8; text-align: center; }
+.stats span { display: block; font-size: .78rem; color: #536176; margin-bottom: 6px; }
+.stats strong { font-size: .9rem; overflow-wrap: anywhere; }
+.matrixFooter { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding: 22px 26px; }
+.rolePicker { display: flex; flex-direction: column; gap: 8px; width: 280px; max-width: 100%; }
+.rolePicker label { font-size: .86rem; font-weight: 500; color: #536176; }
+.rolePicker select { width: 100%; background: #e9ecf2; border: 1px solid transparent; border-radius: 10px; padding: 10px 12px; font-size: .86rem; font-weight: 600; color: #172238; }
+.saveStatus { font-size: .76rem; color: #647084; margin-bottom: 10px; }
+.customPermissions { padding: 20px 28px; border-top: 1px solid #dce0e8; }
+.managePermissions { margin-top: 20px; border: 1px solid #e7e9ef; border-radius: 14px; padding: 18px 22px; background: white; }
+.managePermissions summary { cursor: pointer; font-size: .88rem; font-weight: 600; color: var(--navy); }
+.managePermissions summary span { font-weight: 400; color: var(--slate); }
+.managePermissions > p { margin: 12px 0; }
+.permissionDefinition { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.managePermissions .permissionItem { padding: 10px 0; border-bottom: 1px solid #eef0f3; }
+.managePermissions .permissionItem:last-child { border-bottom: 0; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.modal { max-height: calc(100dvh - 2rem); overflow-y: auto; }
+@media (max-width: 600px) {
+  .matrixHeading, .matrixFooter { padding: 20px 16px; flex-wrap: wrap; }
+  .legend { padding: 16px; gap: 12px; }
+  .matrixScroll { padding: 8px 8px 20px; }
+  .stats { padding: 18px 12px; gap: 8px; }
+  .rolePicker { width: 100%; }
+  .saveStatus { margin: 0; }
+  .headerActions { flex-wrap: wrap; }
+}

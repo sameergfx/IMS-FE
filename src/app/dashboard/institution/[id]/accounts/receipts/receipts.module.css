@@ -7,7 +7,7 @@
 .toolbar { margin-bottom: 1.25rem; }
 .search { width: 100%; max-width: 400px; padding: .6rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: .9rem; outline: none; }
 .search:focus { border-color: var(--blue); }
-.tableWrap { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.tableWrap { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; font-size: .875rem; }
 .table thead tr { background: var(--slate-lt); border-bottom: 1.5px solid var(--border); }
 .table th { padding: .75rem 1rem; text-align: left; font-size: .78rem; font-weight: 600; color: var(--slate); text-transform: uppercase; letter-spacing: .04em; }
@@ -27,3 +27,10 @@
 
 .invLink { color: var(--blue); font-weight: 500; font-size: .85rem; }
 .invLink:hover { text-decoration: underline; }
+
+.filters { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: .75rem; }
+.dateField { display: flex; flex-direction: column; gap: .3rem; color: var(--slate); font-size: .85rem; }
+.dateInput { padding: .6rem .75rem; border: 1.5px solid var(--border); border-radius: var(--radius); background: white; color: var(--navy); font: inherit; }
+.dateInput:focus { outline-color: var(--blue); }
+.totalBar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem 1.25rem; margin-top: 1rem; font-size: .9rem; color: var(--slate); }
+.totalValue { font-family: var(--font-head); font-size: 1.1rem; font-weight: 700; color: var(--navy); }

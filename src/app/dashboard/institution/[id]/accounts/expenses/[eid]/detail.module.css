@@ -46,3 +46,7 @@
 @media (max-width: 600px) {
   .metaGrid { grid-template-columns: 1fr 1fr; }
 }
+
+.itemsTable{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.9rem}.itemsTable th,.itemsTable td{padding:.7rem;text-align:left;border-bottom:1px solid var(--border)}.itemsTable th{background:var(--slate-lt)}
+
+.editBtn{background:var(--blue);color:white;padding:.65rem 1rem;border-radius:8px;text-decoration:none;font-size:.9rem;font-weight:600;display:inline-flex;align-items:center}

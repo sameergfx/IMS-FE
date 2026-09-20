@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { PermissionsProvider } from "@/lib/permissions-context";
 
 export default function PageContainer({
   title,
@@ -14,6 +15,7 @@ export default function PageContainer({
   children?: React.ReactNode;
 }) {
   return (
+    <PermissionsProvider>
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -36,5 +38,6 @@ export default function PageContainer({
 
       {children}
     </div>
+    </PermissionsProvider>
   );
 }

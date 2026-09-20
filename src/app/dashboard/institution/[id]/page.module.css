@@ -64,3 +64,29 @@
   .statsGrid { grid-template-columns: 1fr 1fr; }
   .infoGrid  { grid-template-columns: 1fr; }
 }
+
+.page { max-width: 1400px; }
+.header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.refreshBtn { padding: .55rem .9rem; border: 1px solid var(--border); border-radius: var(--radius); background: white; color: var(--blue); cursor: pointer; }
+.refreshBtn:disabled { opacity: .5; cursor: not-allowed; }
+.quickLinks, .userTypes { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.5rem; }
+.quickLinks a { padding: .65rem 1rem; background: var(--blue); color: white; border-radius: var(--radius); font-size: .85rem; }
+.userTypes a, .userTypes span { background: white; padding: .6rem 1rem; border: 1px solid var(--border); border-radius: var(--radius); color: var(--slate); font-size: .85rem; }
+.userTypes strong { color: var(--navy); margin-left: .5rem; }
+.sectionTitle { font-family: var(--font-head); font-size: 1.1rem; color: var(--navy); margin-bottom: 1rem; }
+.sectionTitle span { font-family: inherit; font-size: .8rem; color: var(--slate); font-weight: 400; margin-left: .5rem; }
+.financeGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.balanceGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.note { font-size: .8rem; color: var(--slate); margin: .75rem 0 1.5rem; }
+.infoCard { display: block; margin-bottom: 1.5rem; }
+.statValue { overflow-wrap: anywhere; }
+.statCard:hover { outline: 1px solid var(--blue); }
+.state { padding: 2rem; background: white; border-radius: var(--radius); color: var(--slate); margin-bottom: 1.5rem; }
+.tableWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.table th, .table td { padding: .75rem; text-align: left; border-bottom: 1px solid var(--border); color: var(--navy); }
+.table th { color: var(--slate); font-size: .8rem; }
+.table a { color: var(--blue); }
+.table .amount { text-align: right; white-space: nowrap; font-weight: 600; }
+@media (max-width: 768px) { .financeGrid, .balanceGrid { grid-template-columns: 1fr; } }
+@media (max-width: 400px) { .statsGrid { grid-template-columns: 1fr; } }

@@ -1,4 +1,5 @@
 "use client"
+import PermissionGate from "@/components/access/PermissionGate"
 
 import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -6,11 +7,13 @@ import { usersApi, accountingApi } from "@/lib/api"
 import { UserResponse } from "@/types"
 import { Account, InvoiceCategory, InvoiceItemCreate } from "@/types/accounting"
 import styles from "./create.module.css"
+import { usePermissions } from "@/lib/permissions-context"
 
 const emptyItem = (): InvoiceItemCreate => ({ account_id: 0, category_name: "", category_id: 0, description: "", amount: 0, discount: 0 })
 
 export default function CreateInvoicePage() {
   const { id } = useParams()
+  const { hasPermission } = usePermissions()
   const router = useRouter()
   const pickerRef = useRef<HTMLDivElement>(null)
 
@@ -254,9 +257,9 @@ export default function CreateInvoicePage() {
           <div className={styles.itemsHeader}>
             <h2 className={styles.cardTitle}>Payment Items</h2>
             <div>
-              <button type="button" className={styles.newCategoryBtn} onClick={openCategoryModal}>
+              <PermissionGate action="invoice-categories.create"><button type="button" className={styles.newCategoryBtn} onClick={openCategoryModal}>
               + New Category
-            </button>
+            </button></PermissionGate>
             <span> </span>
             <button type="button" className={styles.addItemBtn} onClick={() => setItems(p => [...p, emptyItem()])}>
               + Add Item
