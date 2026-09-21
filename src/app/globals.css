@@ -83,3 +83,31 @@ input  { font-family: inherit; }
     @apply bg-background text-foreground; }
   html {
     @apply font-sans; } }
+/* Remove dashboard layout space only when printing a statement. */
+@media print {
+  /* The root canvas also paints the unused area below the report. */
+  html, body {
+    background: #fff !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    color-scheme: light;
+  }
+  body:has([data-statement-print]) *:not([data-statement-print]):not([data-statement-print] *):not(:has([data-statement-print])) {
+    display: none !important;
+  }
+  html:has([data-statement-print]),
+  body:has([data-statement-print]),
+  body:has([data-statement-print]) *:has([data-statement-print]) {
+    display: block !important;
+    position: static !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+}

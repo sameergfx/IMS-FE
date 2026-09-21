@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { accountingApi } from "@/lib/api"
+import { printReport } from "@/lib/print-report"
 import { AccountStatement } from "@/types/accounting"
 import styles from "./page.module.css"
 
@@ -17,6 +18,7 @@ export default function StatementsPage() {
   const [month, setMonth] = useState(() => localDate(new Date()).slice(0, 7))
   const [from, setFrom] = useState(() => localDate(new Date()).slice(0, 8) + "01")
   const [to, setTo] = useState(() => localDate(new Date()))
+  const [generatedOn, setGeneratedOn] = useState<Date | null>(null)
   const [statement, setStatement] = useState<AccountStatement | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -29,48 +31,27 @@ export default function StatementsPage() {
   useEffect(() => {
     let active = true
     setStatement(null)
+    setGeneratedOn(null)
     setError("")
     if (!valid) { setLoading(false); return }
     setLoading(true)
     accountingApi.getStatement(Number(id), startDate, endDate)
-      .then(data => { if (active) setStatement(data) })
+      .then(data => { if (active) { setStatement(data); setGeneratedOn(new Date()) } })
       .catch(err => { if (active) setError(err instanceof Error ? err.message : "Failed to load statement") })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [id, startDate, endDate, valid])
 
-  // Never display/export the previous institution or date range while a new request starts.
+  // Never display/print the previous institution or date range while a new request starts.
   const current = statement?.institution_id === Number(id) && statement.start_date === startDate && statement.end_date === endDate ? statement : null
-  const exportCsv = () => {
-    if (!current) return
-    const rows: (string | number | null)[][] = [
-      ["Institution", current.institution_name], ["From", current.start_date, "To", current.end_date],
-      ["Opening net balance", current.opening_balance],
-      ["Date", "Type", "Number", "Party", "Invoice", "Category", "Description", "Received", "Spent", "Balance"],
-      ...current.entries.map(entry => [entry.date, entry.kind, entry.number, entry.party, entry.invoice_number, entry.category, entry.description, entry.money_in, entry.money_out, entry.balance]),
-      ["Total received", current.total_receipts], ["Total spent", current.total_expenses],
-      ["Closing net balance", current.closing_balance],
-    ]
-    const cell = (value: string | number | null) => {
-      let text = String(value ?? "")
-      if (/^[\s]*[=+@-]/.test(text) && !/^-?\d+(\.\d+)?$/.test(text)) text = "'" + text
-      return `"${text.replace(/"/g, '""')}"`
-    }
-    const url = URL.createObjectURL(new Blob(["\uFEFF" + rows.map(row => row.map(cell).join(",")).join("\r\n")], { type: "text/csv;charset=utf-8;" }))
-    const link = document.createElement("a")
-    link.href = url
-    link.download = `statement-${id}-${current.start_date}-${current.end_date}.csv`
-    link.click()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-  }
 
   return (
-    <div className={styles.page}>
+    <div data-statement-print className={`${styles.page} ${styles.report}`}>
       <div className={styles.header}>
-        <div><h1 className={styles.title}>Statement</h1><p className={styles.sub}>Institution receipts and expenses</p></div>
-        <button className={styles.button} onClick={exportCsv} disabled={!valid || loading || !current}>Export CSV</button>
+        <div><h1 className={styles.title}>Statement</h1><p className={`${styles.sub} ${styles.controls}`}>Institution receipts and expenses</p></div>
+        <button className={`${styles.button} ${styles.controls}`} onClick={() => { if (current) printReport(current.institution_name, "statement") }} disabled={!valid || loading || !current}>Print / Save PDF</button>
       </div>
-      <div className={styles.filters}>
+      <div className={`${styles.filters} ${styles.controls}`}>
         <label>Period<select value={period} onChange={event => setPeriod(event.target.value)}>
           <option value="today">Today</option><option value="monthly">Monthly</option><option value="custom">Custom date range</option>
         </select></label>
@@ -80,13 +61,16 @@ export default function StatementsPage() {
           <label>To<input type="date" value={to} min={from || undefined} onChange={event => setTo(event.target.value)} /></label>
         </>}
       </div>
-      <p className={styles.note}>Balances reflect recorded receipts minus expenses, across all payment methods. Cancelled records are excluded. Opening balance includes transactions before the selected period.</p>
+      <p className={`${styles.note} ${styles.controls}`}>Balances reflect recorded receipts minus expenses, across all payment methods. Cancelled records are excluded. Opening balance includes transactions before the selected period.</p>
       {!valid ? <div className={styles.state} role="alert">Select a valid date range; the end date must be on or after the start date.</div>
         : loading ? <div className={styles.state}>Loading statement...</div>
         : error ? <div className={styles.state} role="alert">{error}</div>
         : current && <>
           <h2 className={styles.institution}>{current.institution_name}</h2>
+          <div className={styles.reportDates}>
           <p className={styles.sub}>{current.start_date} to {current.end_date} · {current.entries.length} transactions</p>
+          {generatedOn && <p className={`${styles.sub} ${styles.generatedOn}`}>Generated On: <time dateTime={generatedOn.toISOString()}>{generatedOn.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true })} IST</time></p>}
+          </div>
           <div className={styles.summary}>
             <div><span>Opening net balance</span><strong>{money(current.opening_balance)}</strong></div>
             <div><span>Total received</span><strong>{money(current.total_receipts)}</strong></div>

@@ -25,3 +25,10 @@
   .shell { flex-direction: column; }
   .main  { padding: 1rem; }
 }
+
+@media print {
+  .shell, .main { background: #fff !important; background-image: none !important; box-shadow: none !important; }
+  .shell { display: block !important; min-height: 0 !important; height: auto !important; }
+  .main { display: block !important; flex: none; padding: 0 !important; margin: 0 !important; overflow: visible !important; min-height: 0 !important; height: auto !important; background: white; }
+  .main > [role="status"] { display: none !important; }
+}

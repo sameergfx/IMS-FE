@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { Trash2, LoaderCircle } from "lucide-react"
 import { accessApi } from "@/lib/api"
 import { Role, Permission } from "@/types"
 import styles from "./roles.module.css"
@@ -299,6 +300,17 @@ export default function RolesPermissionsPage() {
       {error && <div className={styles.error} role="alert">{error}</div>}
 
       <section className={styles.matrixCard} aria-label="Role permissions">
+        <div className={styles.roleToolbar}>
+          <div className={styles.rolePicker}>
+            <label htmlFor="active-role">Active Role</label>
+            <select id="active-role" value={selectedRoleId ?? ""} disabled={accessBusy || roles.length === 0}
+              onChange={event => setSelectedRoleId(Number(event.target.value))}>
+              <option value="" disabled>Select a role</option>
+              {roles.map(role => <option key={role.id} value={role.id}>{role.name}</option>)}
+            </select>
+          </div>
+          <p className={styles.saveStatus} role="status">{accessBusy ? "Saving changes…" : "Changes save automatically"}</p>
+        </div>
         <div className={styles.legend}>
           {permissionActions.map(action => (
             <span key={action} className={styles.legendItem}>
@@ -403,33 +415,23 @@ export default function RolesPermissionsPage() {
           <div><span>Grants Active</span><strong>{grantedCount} / {permissions.length}</strong></div>
           <div><span>Modules</span><strong>{modules.length}</strong></div>
         </div>
-        <div className={styles.matrixFooter}>
-          <div className={styles.rolePicker}>
-            <label htmlFor="active-role">Active Role</label>
-            <select id="active-role" value={selectedRoleId ?? ""} disabled={accessBusy || roles.length === 0}
-              onChange={event => setSelectedRoleId(Number(event.target.value))}>
-              <option value="" disabled>Select a role</option>
-              {roles.map(role => <option key={role.id} value={role.id}>{role.name}</option>)}
-            </select>
-          </div>
-          <p className={styles.saveStatus} role="status">{accessBusy ? "Saving changes…" : "Changes save automatically"}</p>
-        </div>
+
       </section>
 
       {permissions.length > 0 && (
         <details className={styles.managePermissions}>
           <summary>Manage permission definitions <span>({permissions.length})</span></summary>
           <p className={styles.hint}>Deleting a definition removes it globally. Remove it from all roles first.</p>
-          <div className={styles.permList}>
+          <div className={styles.definitionGrid}>
             {permissions.map(permission => (
               <div key={permission.id} className={styles.permissionItem}>
                 <div className={styles.permissionDefinition}>
                   <span className={styles.permCode}>{permission.code}</span>
                   <span className={styles.permDesc}>{permission.description}</span>
                 </div>
-                <button type="button" className={styles.dangerBtn} disabled={accessBusy}
-                  onClick={() => handleDeletePermission(permission)} aria-label={`Delete permission ${permission.code}`}>
-                  {deletingPermission === permission.id ? "Deleting..." : "Delete"}
+                <button type="button" className={styles.deleteIconBtn} disabled={accessBusy}
+                  onClick={() => handleDeletePermission(permission)} title={`Delete ${permission.code}`} aria-busy={deletingPermission === permission.id} aria-label={deletingPermission === permission.id ? `Deleting permission ${permission.code}` : `Delete permission ${permission.code}`}>
+                  {deletingPermission === permission.id ? <LoaderCircle size={17} className={styles.deleteSpinner} aria-hidden="true" /> : <Trash2 size={17} aria-hidden="true" />}
                 </button>
               </div>
             ))}

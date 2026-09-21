@@ -1,4 +1,4 @@
-.page { max-width: 1000px; }
+.page { width: 100%; max-width: 1500px; min-width: 0; }
 .state { padding: 3rem; text-align: center; color: var(--slate); }
 
 .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap; }
@@ -134,7 +134,7 @@
 .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 22px 24px; border-top: 1px solid #dce0e8; border-bottom: 1px solid #dce0e8; text-align: center; }
 .stats span { display: block; font-size: .78rem; color: #536176; margin-bottom: 6px; }
 .stats strong { font-size: .9rem; overflow-wrap: anywhere; }
-.matrixFooter { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding: 22px 26px; }
+.roleToolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding: 22px 26px; border-bottom: 1px solid #dce0e8; }
 .rolePicker { display: flex; flex-direction: column; gap: 8px; width: 280px; max-width: 100%; }
 .rolePicker label { font-size: .86rem; font-weight: 500; color: #536176; }
 .rolePicker select { width: 100%; background: #e9ecf2; border: 1px solid transparent; border-radius: 10px; padding: 10px 12px; font-size: .86rem; font-weight: 600; color: #172238; }
@@ -145,12 +145,21 @@
 .managePermissions summary span { font-weight: 400; color: var(--slate); }
 .managePermissions > p { margin: 12px 0; }
 .permissionDefinition { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.managePermissions .permissionItem { padding: 10px 0; border-bottom: 1px solid #eef0f3; }
-.managePermissions .permissionItem:last-child { border-bottom: 0; }
+.definitionGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
+.managePermissions .permissionItem { min-width: 0; padding: .875rem; border: 1px solid #eef0f3; border-radius: 10px; display: flex; align-items: center; gap: .75rem; }
+.deleteIconBtn { width: 36px; height: 36px; flex-shrink: 0; display: grid; place-items: center; background: #fff; color: #dc2626; border: 1px solid #fecaca; border-radius: 8px; cursor: pointer; }
+.deleteIconBtn:hover:not(:disabled) { background: #fef2f2; border-color: #dc2626; }
+.deleteIconBtn:focus-visible { outline: 2px solid #dc2626; outline-offset: 3px; }
+.deleteIconBtn:disabled { opacity: .5; cursor: not-allowed; }
+.deleteSpinner { animation: deleteSpin 1s linear infinite; }
+@keyframes deleteSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .deleteSpinner { animation: none; } }
+@media (max-width: 1200px) { .definitionGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .definitionGrid { grid-template-columns: 1fr; } }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .modal { max-height: calc(100dvh - 2rem); overflow-y: auto; }
 @media (max-width: 600px) {
-  .matrixHeading, .matrixFooter { padding: 20px 16px; flex-wrap: wrap; }
+  .matrixHeading, .roleToolbar { padding: 20px 16px; flex-wrap: wrap; }
   .legend { padding: 16px; gap: 12px; }
   .matrixScroll { padding: 8px 8px 20px; }
   .stats { padding: 18px 12px; gap: 8px; }

@@ -143,3 +143,7 @@
 }
 
 .logoutBtn:hover { color: white; }
+
+@media print {
+  .sidebar { display: none !important; }
+}

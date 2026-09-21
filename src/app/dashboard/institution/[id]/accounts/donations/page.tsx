@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import PermissionGate, { useUiAccess } from "@/components/access/PermissionGate"
 import { useAuth } from "@/lib/auth-context"
 import { useParams, useRouter } from "next/navigation"
@@ -35,6 +35,12 @@ export default function DonationPage() {
     finally { setCreatingCategory(false) }
   }
   const [categories, setCategories] = useState<InvoiceCategory[]>([])
+  const [userSearch, setUserSearch] = useState("")
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [activeOption, setActiveOption] = useState(-1)
+  const [usersLoading, setUsersLoading] = useState(false)
+  const [usersError, setUsersError] = useState("")
+  const searchInput = useRef<HTMLInputElement>(null)
   const [users, setUsers] = useState<UserResponse[]>([])
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
@@ -43,11 +49,25 @@ export default function DonationPage() {
   useEffect(() => { accountingApi.getInvoiceCategories().then(setCategories).catch(err => setError(err.message)) }, [])
   useEffect(() => {
     let active = true
-    if (form.donor_type === "existing") usersApi.getAll(Number(id)).then(value => { if (active) setUsers(value) }).catch(err => { if (active) setError(err.message) })
+    setUsers([]); setUsersError(""); setUsersLoading(form.donor_type === "existing")
+    field("user_id", ""); setUserSearch(""); setPickerOpen(false)
+    if (form.donor_type === "existing") usersApi.getAll(Number(id))
+      .then(value => { if (active) setUsers(value.filter(user => user.is_active)) })
+      .catch(err => { if (active) setUsersError(err.message) })
+      .finally(() => { if (active) setUsersLoading(false) })
     return () => { active = false }
   }, [id, form.donor_type])
+  const selectedDonor = users.find(user => String(user.id) === form.user_id)
+  const query = userSearch.trim().toLowerCase()
+  const matchingUsers = users.filter(user => [user.full_name, user.ref_number, user.employee_id, user.phone, user.email].some(value => value?.toLowerCase().includes(query)))
+  const suggestions = matchingUsers.slice(0, 10)
+  const chooseDonor = (donor: UserResponse) => {
+    field("user_id", String(donor.id)); setUserSearch(donor.full_name); setPickerOpen(false); setActiveOption(-1)
+  }
   const submit = async (event: React.FormEvent) => {
-    event.preventDefault(); setBusy(true); setError("")
+    event.preventDefault()
+    if (form.donor_type === "existing" && !selectedDonor) { setError("Select a donor from the search results"); searchInput.current?.focus(); return }
+    setBusy(true); setError("")
     try {
       const receipt = await accountingApi.receiveDonation({ ...form, institution_id: Number(id), user_id: form.donor_type === "existing" ? Number(form.user_id) : null, category_id: Number(form.category_id), amount: form.amount })
       router.push(`/dashboard/institution/${id}/accounts/receipts/${receipt.id}`)
@@ -70,11 +90,32 @@ export default function DonationPage() {
                   <option value="external">External donor</option><option value="existing">Existing user</option><option value="anonymous">Anonymous</option>
                 </select>
               </label>
-              {form.donor_type === "existing" && <label className={styles.field}><span className={styles.label}>User *</span>
-                <select className={styles.input} required value={form.user_id} onChange={e => field("user_id", e.target.value)}>
-                  <option value="">Select user</option>{users.map(user => <option key={user.id} value={user.id}>{user.full_name}</option>)}
-                </select>
-              </label>}
+              {form.donor_type === "existing" && <div className={styles.field} style={{ gridColumn: "1 / -1" }}>
+                <label className={styles.label} htmlFor="donor-search">User *</label>
+                {selectedDonor ? <div className={styles.selectedUser}>
+                  <div className={styles.userInfo}><p className={styles.userName}>{selectedDonor.full_name}</p><p className={styles.userMeta}>{[selectedDonor.ref_number || selectedDonor.employee_id, selectedDonor.phone, selectedDonor.email].filter(Boolean).join(" · ")}</p></div>
+                  <button type="button" className={styles.changeBtn} onClick={() => { field("user_id", ""); setUserSearch(""); setActiveOption(-1); setPickerOpen(true); setTimeout(() => searchInput.current?.focus(), 0) }}>Change</button>
+                </div> : <div className={styles.userPicker}>
+                  <input id="donor-search" ref={searchInput} className={styles.input} role="combobox" aria-autocomplete="list" aria-expanded={pickerOpen} aria-controls="donor-options"
+                    aria-activedescendant={pickerOpen && suggestions[activeOption] ? `donor-option-${suggestions[activeOption].id}` : undefined}
+                    autoComplete="off" placeholder="Search by name, ID, phone or email…" value={userSearch}
+                    onChange={e => { setUserSearch(e.target.value); setPickerOpen(true); setActiveOption(-1) }}
+                    onFocus={() => setPickerOpen(true)} onBlur={() => setPickerOpen(false)}
+                    onKeyDown={e => {
+                      if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); setPickerOpen(true); setActiveOption(index => Math.max(0, Math.min(suggestions.length - 1, index + (e.key === "ArrowDown" ? 1 : -1)))) }
+                      if (e.key === "Escape") { e.preventDefault(); setPickerOpen(false) }
+                      if (e.key === "Enter" && pickerOpen) { e.preventDefault(); if (suggestions[activeOption]) chooseDonor(suggestions[activeOption]) }
+                    }} />
+                  {pickerOpen && <div className={styles.userDropdown} id="donor-options" role="listbox" aria-label="Matching donors">
+                    {suggestions.map((donor, index) => <div key={donor.id} id={`donor-option-${donor.id}`} role="option" aria-selected={index === activeOption}
+                      className={styles.userOption} style={index === activeOption ? { background: "var(--slate-lt)" } : undefined}
+                      onMouseDown={e => e.preventDefault()} onClick={() => chooseDonor(donor)}>
+                      <div><p className={styles.optName}>{donor.full_name}</p><p className={styles.optMeta}>{[donor.ref_number || donor.employee_id, donor.phone, donor.email].filter(Boolean).join(" · ")}</p></div>
+                    </div>)}
+                  </div>}
+                  <p className={styles.hint} role="status">{usersLoading ? "Loading donors…" : usersError || (matchingUsers.length === 0 ? "No matching donors found." : matchingUsers.length > 10 ? "Showing the first 10 matches. Type more to narrow your search." : "Select a donor from the results. Use arrow keys and Enter to select.")}</p>
+                </div>}
+              </div>}
               {form.donor_type === "external" && <>
                 <label className={styles.field}><span className={styles.label}>Donor Name *</span>
                   <input className={styles.input} required maxLength={200} placeholder="Donor full name" value={form.donor_name} onChange={e => field("donor_name", e.target.value)} />

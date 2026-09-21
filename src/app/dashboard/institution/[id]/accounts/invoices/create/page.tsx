@@ -23,6 +23,7 @@ export default function CreateInvoicePage() {
   const [submitting, setSubmitting] = useState(false)
   const [error,      setError]      = useState("")
   const [userSearch, setUserSearch] = useState("")
+  const [activeUserIndex, setActiveUserIndex] = useState(-1)
   const [showUserList, setShowUserList] = useState(false)
 
   const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null)
@@ -71,9 +72,19 @@ export default function CreateInvoicePage() {
     setItems(p => p.map((it, idx) => idx === i ? { ...it, [k]: v } : it))
 
   const filteredUsers = users.filter(u =>
-    u.full_name.toLowerCase().includes(userSearch.toLowerCase()) ||
-    u.email.toLowerCase().includes(userSearch.toLowerCase())
+    [u.full_name, u.admission_number, u.employee_id, u.ref_number].some(value =>
+      value?.toLowerCase().includes(userSearch.trim().toLowerCase()))
   )
+  const suggestions = filteredUsers.slice(0, 10)
+  const userDetails = (u: UserResponse) => [
+    u.admission_number ? `Admission No: ${u.admission_number}` : null,
+    u.employee_id ? `Employee ID: ${u.employee_id}` : null,
+    !u.admission_number && !u.employee_id && u.ref_number ? `${u.ref_label || "ID"}: ${u.ref_number}` : null,
+    u.user_type,
+  ].filter(Boolean).join(" · ")
+  const chooseUser = (u: UserResponse) => {
+    setSelectedUser(u); setShowUserList(false); setUserSearch(""); setActiveUserIndex(-1)
+  }
 
   const subtotal    = items.reduce((s, it) => s + (Number(it.amount) - Number(it.discount)), 0)
   const totalAmount = subtotal - Number(form.discount)
@@ -174,7 +185,7 @@ export default function CreateInvoicePage() {
               </div>
               <div className={styles.userInfo}>
                 <p className={styles.userName}>{selectedUser.full_name}</p>
-                <p className={styles.userMeta}>{selectedUser.email} · <span className={styles.userType}>{selectedUser.user_type}</span></p>
+                <p className={styles.userMeta}>{userDetails(selectedUser)}</p>
               </div>
               <button type="button" className={styles.changeBtn} onClick={() => { setSelectedUser(null); setShowUserList(true) }}>
                 Change
@@ -184,29 +195,38 @@ export default function CreateInvoicePage() {
             <div className={styles.userPicker} ref={pickerRef}>
               <input
                 className={styles.input}
-                placeholder={users.length === 0 ? "No users found for this institution" : "Search by name or email..."}
+                placeholder={users.length === 0 ? "No users found for this institution" : "Search by name, admission no. or employee ID..."}
+                role="combobox" aria-label="Search invoice user" aria-autocomplete="list" autoComplete="off"
+                aria-expanded={showUserList} aria-controls="invoice-user-options"
+                aria-activedescendant={showUserList && suggestions[activeUserIndex] ? `invoice-user-${suggestions[activeUserIndex].id}` : undefined}
+                onBlur={() => setShowUserList(false)}
+                onKeyDown={e => {
+                  if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); setShowUserList(true); setActiveUserIndex(index => Math.max(0, Math.min(suggestions.length - 1, index + (e.key === "ArrowDown" ? 1 : -1)))) }
+                  if (e.key === "Escape") { e.preventDefault(); setShowUserList(false) }
+                  if (e.key === "Enter" && showUserList) { e.preventDefault(); if (suggestions[activeUserIndex]) chooseUser(suggestions[activeUserIndex]) }
+                }}
                 value={userSearch}
-                onChange={e => { setUserSearch(e.target.value); setShowUserList(true) }}
+                onChange={e => { setUserSearch(e.target.value); setShowUserList(true); setActiveUserIndex(-1) }}
                 onFocus={() => setShowUserList(true)}
                 disabled={users.length === 0}
               />
               {showUserList && users.length > 0 && (
-                <div className={styles.userDropdown}>
+                <div className={styles.userDropdown} id="invoice-user-options" role="listbox" aria-label="Matching users">
                   {filteredUsers.length === 0 ? (
                     <p className={styles.noUsers}>No users match &quot;{userSearch}&quot;</p>
                   ) : (
-                    filteredUsers.slice(0, 8).map(u => (
+                    suggestions.map((u, index) => (
                       <button
-                        type="button"
+                        type="button" role="option" tabIndex={-1} id={`invoice-user-${u.id}`} aria-selected={activeUserIndex === index}
+                        style={activeUserIndex === index ? { background: "var(--slate-lt)" } : undefined}
+                        onClick={() => chooseUser(u)}
                         key={u.id}
                         className={styles.userOption}
                         onMouseDown={(e) => {
                           // onMouseDown fires before blur — prevents the dropdown
                           // from closing before the click is registered
                           e.preventDefault()
-                          setSelectedUser(u)
-                          setShowUserList(false)
-                          setUserSearch("")
+
                         }}
                       >
                         <div className={styles.userAvatarSm}>
@@ -214,13 +234,14 @@ export default function CreateInvoicePage() {
                         </div>
                         <div>
                           <p className={styles.optName}>{u.full_name}</p>
-                          <p className={styles.optMeta}>{u.email} · {u.user_type}</p>
+                          <p className={styles.optMeta}>{userDetails(u)}</p>
                         </div>
                       </button>
                     ))
                   )}
                 </div>
               )}
+              {filteredUsers.length > 10 && <p className={styles.hint}>Showing the first 10 matches. Type more to narrow your search.</p>}
             </div>
           )}
         </div>
