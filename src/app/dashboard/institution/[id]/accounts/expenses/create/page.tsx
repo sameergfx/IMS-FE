@@ -1,4 +1,5 @@
 "use client"
+import MoneyAccountSelect from "@/components/accounting/MoneyAccountSelect"
 import PermissionGate from "@/components/access/PermissionGate"
 
 import { useEffect, useRef, useState } from "react"
@@ -65,6 +66,7 @@ export default function CreateExpensePage() {
     }
   }
 
+  const [moneyAccount, setMoneyAccount] = useState("")
   const [form, setForm] = useState({
     paid_to:          "",
     expense_date:     new Date().toISOString().split("T")[0],
@@ -89,6 +91,7 @@ export default function CreateExpensePage() {
       if (!active) return
       if (expense.institution_id !== Number(id)) throw new Error("Expense does not belong to this institution")
       if (expense.status === "cancelled") throw new Error("Cancelled expenses cannot be edited")
+      setMoneyAccount(expense.money_account_id ? String(expense.money_account_id) : "")
       setForm({ paid_to: expense.paid_to || "", expense_date: expense.expense_date,
         payment_method: expense.payment_method || "cash", reference_number: expense.reference_number || "",
         bank_name: expense.bank_name || "", description: expense.description || "", notes: expense.notes || "" })
@@ -120,6 +123,7 @@ export default function CreateExpensePage() {
         expense_date:     form.expense_date,
         paid_to:          form.paid_to,
         payment_method:   form.payment_method,
+        money_account_id: moneyAccount ? Number(moneyAccount) : null,
         items: items.map(item => ({ category_id: item.category_id, description: item.description.trim(), amount: Number(item.amount), discount: Number(item.discount || 0) })),
         reference_number: form.reference_number || null,
         bank_name:        form.bank_name || null,
@@ -179,6 +183,7 @@ export default function CreateExpensePage() {
                 {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m.replace("_", " ").toUpperCase()}</option>)}
               </select>
             </div>
+            <MoneyAccountSelect institutionId={Number(id)} method={form.payment_method} value={moneyAccount} onChange={setMoneyAccount} />
             <div className={styles.field}>
               <label className={styles.label}>Reference No</label>
               <input className={styles.input} placeholder="Cheque / UTR / UPI ref"

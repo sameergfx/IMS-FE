@@ -271,3 +271,25 @@ export const accountingApi = {
   cancelExpense:            (id: number, reason: string) =>
     apiFetch<Expense>(`/accounting/expenses/${id}/cancel`, { method: "POST", body: JSON.stringify({ cancellation_reason: reason }) }),
 }
+export const bankingApi = {
+  options: (id: number) => apiFetch<MoneyAccount[]>(`/banking/institution/${id}/account-options`),
+  accounts: (id: number) => apiFetch<MoneyAccount[]>(`/banking/institution/${id}/accounts`),
+  create: (id: number, data: unknown) => apiFetch<MoneyAccount>(`/banking/institution/${id}/accounts`, { method: 'POST', body: JSON.stringify(data) }),
+  transfers: (id: number) => apiFetch<BankTransfer[]>(`/banking/institution/${id}/transfers`),
+  transfer: (id: number, data: unknown) => apiFetch<BankTransfer>(`/banking/institution/${id}/transfers`, { method: 'POST', body: JSON.stringify(data) }),
+  cancel: (id: number, transferId: number, reason: string) => apiFetch(`/banking/institution/${id}/transfers/${transferId}/cancel`, { method: 'POST', body: JSON.stringify({ reason }) }),
+  statement: (id: number, account: number, start: string, end: string) => apiFetch<BankStatement>(`/banking/institution/${id}/accounts/${account}/statement?${new URLSearchParams({start, end})}`),
+}
+export interface MoneyAccount { id: number; name: string; kind: 'cash' | 'bank'; bank_name?: string; account_last_four?: string; opening_date: string; opening_balance?: number | string }
+export interface BankTransfer { id: number; source_id: number; destination_id: number; transfer_date: string; amount: number | string; status: string; reference?: string; cancellation_reason?: string }
+export interface BankStatement { account_id: number; account_name: string; start_date: string; end_date: string; opening_balance: number | string; closing_balance: number | string; money_in: number | string; money_out: number | string; entries: {id: number; institution_id?: number; kind: string; date: string; reference: string; money_in: number | string; money_out: number | string; balance: number | string}[] }
+
+export interface OrganisationSettings { configured: boolean; name: string; banking_mode: 'independent' | 'shared' | null; banking_locked: boolean; can_manage: boolean }
+export const organisationApi = {
+  get: () => apiFetch<OrganisationSettings>('/organisation'),
+  save: (data: { name: string; banking_mode: string }) => apiFetch<OrganisationSettings>('/organisation', { method: 'PUT', body: JSON.stringify(data) }),
+  linkBank: (account: number, institution: number) => apiFetch(`/organisation/bank-accounts/${account}/institutions/${institution}`, {method: "POST"}),
+  banks: () => apiFetch<MoneyAccount[]>('/organisation/bank-accounts'),
+  createBank: (data: unknown) => apiFetch<MoneyAccount>('/organisation/bank-accounts', { method: 'POST', body: JSON.stringify(data) }),
+  statement: (id: number, start: string, end: string) => apiFetch<BankStatement>(`/organisation/bank-accounts/${id}/statement?${new URLSearchParams({start,end})}`),
+}

@@ -26,6 +26,7 @@ export function routePermission(path: string): string | null {
   if (route.startsWith("settings")) return "settings.read"
   const parts = route.split("/")
   if (parts[0] === "accounts") {
+    if (parts[1] === "banking") return "banking.read"
     if (parts[1] === "donations") return "receipts.create"
     if (parts[1] === "daily-statement") return "statements.read"
     const module = parts[1]

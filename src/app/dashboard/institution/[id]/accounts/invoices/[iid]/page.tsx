@@ -1,4 +1,5 @@
 "use client"
+import MoneyAccountSelect from "@/components/accounting/MoneyAccountSelect"
 import PermissionGate from "@/components/access/PermissionGate"
 
 import { useEffect, useState } from "react"
@@ -35,6 +36,7 @@ export default function InvoiceDetailPage() {
     }
     setAllocated(next)
   }
+  const [moneyAccount, setMoneyAccount] = useState("")
   const [showPay,    setShowPay]    = useState(false)
   const [paying,     setPaying]     = useState(false)
   const [payError,   setPayError]   = useState("")
@@ -102,6 +104,7 @@ export default function InvoiceDetailPage() {
         payment_method:   payForm.payment_method,
         amount_paid:      amt,
         allocations,
+        money_account_id: moneyAccount ? Number(moneyAccount) : null,
         reference_number: payForm.reference_number || null,
         bank_name:        payForm.bank_name || null,
         notes:            payForm.notes || null,
@@ -217,6 +220,7 @@ export default function InvoiceDetailPage() {
             <p className={styles.modalSub}>Balance due: ₹{Number(invoice.balance_due).toLocaleString()}</p>
 
             <form onSubmit={handlePay} className={styles.modalForm}>
+              <MoneyAccountSelect institutionId={Number(id)} method={payForm.payment_method} value={moneyAccount} onChange={setMoneyAccount} />
               <div className={styles.field}>
                 <label className={styles.label}>Amount Paid *</label>
                 <input className={styles.input} type="number" min="0" max={invoice.balance_due} step="0.01"

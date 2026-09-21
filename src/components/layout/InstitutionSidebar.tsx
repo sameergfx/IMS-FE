@@ -31,6 +31,7 @@ const buildNav = (id: number): NavItem[] => [
     icon: "📒", label: "Accounts",
     children: [
       { href: `/dashboard/institution/${id}/accounts/invoices`,   label: "Invoices"   },
+      { href: `/dashboard/institution/${id}/accounts/banking`, label: "Bank & Cash" },
       { href: `/dashboard/institution/${id}/accounts/donations`, label: "Receive Donation" },
       { href: `/dashboard/institution/${id}/accounts/receipts`,   label: "Receipts"   },
       { href: `/dashboard/institution/${id}/accounts/expenses`,   label: "Expenses"   },

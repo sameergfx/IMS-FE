@@ -1,4 +1,5 @@
 "use client"
+import MoneyAccountSelect from "@/components/accounting/MoneyAccountSelect"
 import { useEffect, useState, useRef } from "react"
 import PermissionGate, { useUiAccess } from "@/components/access/PermissionGate"
 import { useAuth } from "@/lib/auth-context"
@@ -43,6 +44,7 @@ export default function DonationPage() {
   const searchInput = useRef<HTMLInputElement>(null)
   const [users, setUsers] = useState<UserResponse[]>([])
   const [error, setError] = useState("")
+  const [moneyAccount, setMoneyAccount] = useState("")
   const [busy, setBusy] = useState(false)
   const [form, setForm] = useState({ donor_type: "external", user_id: "", donor_name: "", donor_phone: "", donor_address: "", category_id: "", amount: "", received_date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` })(), payment_method: "cash", reference_number: "", notes: "" })
   const field = (name: string, value: string) => setForm(previous => ({ ...previous, [name]: value }))
@@ -69,7 +71,7 @@ export default function DonationPage() {
     if (form.donor_type === "existing" && !selectedDonor) { setError("Select a donor from the search results"); searchInput.current?.focus(); return }
     setBusy(true); setError("")
     try {
-      const receipt = await accountingApi.receiveDonation({ ...form, institution_id: Number(id), user_id: form.donor_type === "existing" ? Number(form.user_id) : null, category_id: Number(form.category_id), amount: form.amount })
+      const receipt = await accountingApi.receiveDonation({ ...form, money_account_id: moneyAccount ? Number(moneyAccount) : null, institution_id: Number(id), user_id: form.donor_type === "existing" ? Number(form.user_id) : null, category_id: Number(form.category_id), amount: form.amount })
       router.push(`/dashboard/institution/${id}/accounts/receipts/${receipt.id}`)
     } catch (err) { setError(err instanceof Error ? err.message : "Failed to record donation"); setBusy(false) }
   }
@@ -153,6 +155,7 @@ export default function DonationPage() {
 
           <section className={styles.card}>
             <h2 className={styles.cardTitle}>Payment Details</h2>
+            <MoneyAccountSelect institutionId={Number(id)} method={form.payment_method} value={moneyAccount} onChange={setMoneyAccount} />
             <div className={styles.grid2}>
               <label className={styles.field}><span className={styles.label}>Payment Method *</span>
                 <select className={styles.input} value={form.payment_method} onChange={e => field("payment_method", e.target.value)}>

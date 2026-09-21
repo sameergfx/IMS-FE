@@ -80,6 +80,7 @@ export interface InvoiceCreate {
 // ── Receipt (payment against invoice) ─────────────────────────────────────────
 
 export interface Receipt {
+  money_account_id?: number | null
   donor_name?: string | null
   donor_phone?: string | null
   donor_address?: string | null
@@ -104,6 +105,7 @@ export interface Receipt {
 }
 
 export interface ReceiptCreate {
+  money_account_id?: number | null
   institution_id:   number
   invoice_id:       number
   receipt_date:     string
@@ -118,6 +120,7 @@ export interface ReceiptCreate {
 // ── Expense ──────────────────────────────────────────────────────────────────
 
 export interface ExpenseCategory {
+  money_account_id?: number | null
   id:          number
   name:        string
   code:        string
@@ -129,6 +132,7 @@ export type ExpenseStatus = "active" | "cancelled"
 export interface Expense extends ExpenseRecord {}
 
 export interface ExpenseItem {
+  money_account_id?: number | null
   id: number
   account_id: number | null
   category_id: number | null
@@ -140,6 +144,7 @@ export interface ExpenseItem {
 }
 
 export interface ExpenseItemCreate {
+  money_account_id?: number | null
   category_id: number
   description: string
   amount: number
@@ -147,6 +152,7 @@ export interface ExpenseItemCreate {
 }
 
 export interface ExpenseCreate {
+  money_account_id?: number | null
   institution_id:   number
   expense_date:     string
   paid_to:          string
@@ -161,6 +167,7 @@ export interface ExpenseCreate {
 
 // Persisted expense records returned by the institution list endpoint.
 export interface ExpenseRecord {
+  money_account_id?: number | null
   id: number
   expense_number: string
   institution_id: number

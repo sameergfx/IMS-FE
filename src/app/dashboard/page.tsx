@@ -2,13 +2,17 @@
 
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
-import { institutionsApi } from "@/lib/api"
+import Link from "next/link"
+import { organisationApi, OrganisationSettings, institutionsApi } from "@/lib/api"
 import { Institution } from "@/types/institution"
 import styles from "./page.module.css"
 
 export default function DashboardPage() {
   const { user, selectInstitution, logout } = useAuth()
-  const canManageInstitutions = user?.user_type === "admin"
+  const [organisation, setOrganisation] = useState<OrganisationSettings | null>(null)
+  const [setupError, setSetupError] = useState("")
+  useEffect(() => { organisationApi.get().then(setOrganisation).catch(err => setSetupError(err.message)) }, [])
+  const canManageInstitutions = user?.user_type === "admin" && organisation?.configured
   const [institutions, setInstitutions] = useState<Institution[]>([])
   const [loading,      setLoading]      = useState(true)
   const [search,       setSearch]       = useState("")
@@ -78,6 +82,7 @@ export default function DashboardPage() {
           <p className={styles.sub}>Choose an institution to manage</p>
         </div>
         <div className={styles.headerActions}>
+          {organisation?.can_manage && <Link className={styles.cancelBtn} href="/dashboard/organisation">Organisation Setup</Link>}
           {canManageInstitutions && <button className={styles.addBtn} onClick={() => setShowAdd(true)}>
             + Add Institution
           </button>}
@@ -85,6 +90,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {setupError && <p className={styles.error} role="alert">{setupError}</p>}
+      {organisation && !organisation.configured && <p className={styles.error}>Complete Organisation Setup before adding institutions. {organisation.can_manage ? <Link href="/dashboard/organisation">Set up organisation</Link> : "Ask the superadmin to complete setup."}</p>}
       {/* Search */}
       <div className={styles.searchWrap}>
         <input
