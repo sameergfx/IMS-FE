@@ -105,7 +105,7 @@ export default function UserDetailPage() {
   useEffect(() => { load(); loadAccess() }, [uid])
 
   const setField = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }))
-  const setMetaField = (k: string, v: any) => setMetaForm(f => ({ ...f, [k]: v }))
+  const setMetaField = (k: string, v: any) => setMetaForm((f: Record<string, unknown>) => ({ ...f, [k]: v }))
 
   const handleSave = async () => {
     if (saving || photoUploading) return

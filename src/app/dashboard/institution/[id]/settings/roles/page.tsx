@@ -1,5 +1,6 @@
 "use client"
 
+import ResponsibilityPanel from "@/components/access/ResponsibilityPanel"
 import { useEffect, useState } from "react"
 import { Trash2, LoaderCircle } from "lucide-react"
 import { accessApi } from "@/lib/api"
@@ -286,6 +287,7 @@ export default function RolesPermissionsPage() {
 
   return (
     <div className={styles.page}>
+      <ResponsibilityPanel />
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Roles & Permissions</h1>
@@ -396,7 +398,7 @@ export default function RolesPermissionsPage() {
             )}
             {customPermissions.length > 0 && (
               <div className={styles.customPermissions}>
-                <h3 className={styles.roleTitle}>Additional permissions</h3>
+                <h3 className={styles.roleTitle}>Special actions</h3>
                 {customPermissions.map(permission => (
                   <label key={permission.id} className={styles.permRow}>
                     <input type="checkbox" checked={hasPermission(permission.id)} disabled={accessBusy || !selectedRole}

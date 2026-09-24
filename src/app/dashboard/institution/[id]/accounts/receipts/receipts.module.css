@@ -4,8 +4,8 @@
 .sub { color: var(--slate); font-size: .875rem; margin-top: .2rem; }
 .createBtn { background: var(--blue); color: white; padding: .6rem 1.25rem; border-radius: var(--radius); font-size: .9rem; font-weight: 600; transition: background .15s; white-space: nowrap; }
 .createBtn:hover { background: #1d4ed8; }
-.toolbar { margin-bottom: 1.25rem; }
-.search { width: 100%; max-width: 400px; padding: .6rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: .9rem; outline: none; }
+.toolbar { display: flex; align-items: flex-end; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.25rem; }
+.search { flex: 1 1 220px; min-width: 180px; width: auto; padding: .6rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: .9rem; outline: none; }
 .search:focus { border-color: var(--blue); }
 .tableWrap { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; font-size: .875rem; }
@@ -28,9 +28,11 @@
 .invLink { color: var(--blue); font-weight: 500; font-size: .85rem; }
 .invLink:hover { text-decoration: underline; }
 
-.filters { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: .75rem; }
+.filters { display: flex; gap: .75rem; flex-wrap: wrap; align-items: flex-end; margin-top: 0; }
 .dateField { display: flex; flex-direction: column; gap: .3rem; color: var(--slate); font-size: .85rem; }
 .dateInput { padding: .6rem .75rem; border: 1.5px solid var(--border); border-radius: var(--radius); background: white; color: var(--navy); font: inherit; }
 .dateInput:focus { outline-color: var(--blue); }
 .totalBar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem 1.25rem; margin-top: 1rem; font-size: .9rem; color: var(--slate); }
 .totalValue { font-family: var(--font-head); font-size: 1.1rem; font-weight: 700; color: var(--navy); }
+
+@media (max-width: 600px) { .toolbar > .search { flex-basis: 100%; min-width: 0; } .filters { width: 100%; } .dateField { flex: 1 1 140px; min-width: 0; } .dateInput { width: 100%; min-width: 0; box-sizing: border-box; } }

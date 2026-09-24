@@ -52,7 +52,7 @@ export default function ExpenseDetailPage() {
             {expense.status}
           </span>
         </div>
-        {expense.status === "active" && (
+        {expense.status === "active" && !expense.assistance_application_id && (
           <div className={styles.actions}>
             <PermissionGate action="expenses.update"><Link href={`/dashboard/institution/${id}/accounts/expenses/${eid}/edit`} className={styles.editBtn}>Edit Expense</Link></PermissionGate>
             <PermissionGate action="expenses.cancel"><button className={styles.cancelBtn} onClick={() => setShowCancel(true)}>Cancel Expense</button></PermissionGate>
@@ -86,6 +86,7 @@ export default function ExpenseDetailPage() {
           <span className={styles.amountValue}>₹{Number(expense.total_amount).toLocaleString()}</span>
         </div>
 
+        {expense.assistance_application_id && <p>This payment is managed through its assistance application. <PermissionGate action="applications.read"><Link href={`/dashboard/institution/${id}/applications?application=${expense.assistance_application_id}`}>Open application</Link></PermissionGate></p>}
         {expense.cancellation_reason && (
           <div className={styles.cancelNote}><strong>Cancelled:</strong> {expense.cancellation_reason}</div>
         )}

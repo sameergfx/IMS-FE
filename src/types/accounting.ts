@@ -167,6 +167,7 @@ export interface ExpenseCreate {
 
 // Persisted expense records returned by the institution list endpoint.
 export interface ExpenseRecord {
+  assistance_application_id?: number | null
   money_account_id?: number | null
   id: number
   expense_number: string

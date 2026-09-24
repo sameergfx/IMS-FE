@@ -10,7 +10,7 @@ import styles from "./BillDocument.module.css"
 const money = (value: number | string) => Number(value).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const date = (value: string) => new Date(`${value}T00:00:00`).toLocaleDateString("en-GB")
 
-export default function BillDocument({ invoice, receipt }: { invoice: Invoice; receipt?: Receipt }) {
+export default function BillDocument({ invoice, receipt, inline = false }: { invoice: Invoice; receipt?: Receipt; inline?: boolean }) {
   const [institution, setInstitution] = useState<Institution | null>(null)
   const [party, setParty] = useState<UserResponse | null>(null)
   const [error, setError] = useState("")
@@ -52,7 +52,7 @@ export default function BillDocument({ invoice, receipt }: { invoice: Invoice; r
   }
 
   const cancelled = receipt ? receipt.status === "cancelled" : invoice.status === "cancelled"
-  return <section className={styles.wrapper}>
+  return <section className={`${styles.wrapper} ${inline ? styles.inline : ""}`}>
     <div className={styles.toolbar}>
       <button type="button" onClick={print} disabled={!institution || (!party && !invoice.donor_name) || printing}>{printing ? "Preparing…" : "Print / Save PDF"}</button>
     </div>

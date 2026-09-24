@@ -22,7 +22,7 @@ export const tokenStorage = {
   },
 }
 
-async function apiFetch<T>(path: string, options: RequestInit = {}, retry = true): Promise<T> {
+async function apiFetch<T>(path: string, options: RequestInit = {}, retry = true, binary = false): Promise<T> {
   const session = tokenStorage.getSession()
   const token = tokenStorage.getAccess()
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -39,7 +39,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}, retry = true
   if (res.status === 401 && retry) {
     const refreshed = await refreshAccessToken()
     if (session !== tokenStorage.getSession()) throw new Error("Session changed")
-    if (refreshed) return apiFetch<T>(path, options, false)
+    if (refreshed) return apiFetch<T>(path, options, false, binary)
     tokenStorage.clear()
     window.location.href = "/login"
     throw new Error("Session expired")
@@ -60,7 +60,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}, retry = true
     return undefined as T
   }
 
-  return res.json() as Promise<T>
+  return (binary ? res.blob() : res.json()) as Promise<T>
 }
 
 async function refreshAccessToken(): Promise<boolean> {
@@ -136,7 +136,12 @@ export const usersApi = {
     apiFetch<void>(`/users/${userId}/institution-access/${institutionId}`, { method: "DELETE" }),
 }
 
+export type InstitutionResponsibility = { id: number; user_id: number; name: string; role_id: number; role_name: string; responsibility: string | null; starts_on: string | null; ends_on: string | null; is_active: boolean }
+export type AssignmentPerson = { id: number; name: string; reference: string | null; phone: string | null; home_institution: string | null }
 export const accessApi = {
+  searchAssignmentPeople: (id: number, q: string) => apiFetch<AssignmentPerson[]>(`/institutions/${id}/assignment-people?q=${encodeURIComponent(q)}`),
+  getResponsibilities: (id: number) => apiFetch<InstitutionResponsibility[]>(`/institutions/${id}/responsibilities`),
+  saveResponsibility: (id: number, data: { user_id: number; role_id: number; responsibility: string; starts_on: string | null; ends_on: string | null; is_active: boolean }) => apiFetch(`/institutions/${id}/responsibilities`, { method: "PUT", body: JSON.stringify(data) }),
   getTemporaryAccess: (userId: number, institutionId: number) => apiFetch<any[]>(`/users/${userId}/institutions/${institutionId}/temporary-access`),
   grantTemporaryAccess: (userId: number, institutionId: number, data: { permission_code: string; expires_at: string; reason: string }) => apiFetch<any>(`/users/${userId}/institutions/${institutionId}/temporary-access`, { method: "POST", body: JSON.stringify(data) }),
   revokeTemporaryAccess: (grantId: number) => apiFetch<any>(`/temporary-access/${grantId}/revoke`, { method: "POST" }),
@@ -280,16 +285,50 @@ export const bankingApi = {
   cancel: (id: number, transferId: number, reason: string) => apiFetch(`/banking/institution/${id}/transfers/${transferId}/cancel`, { method: 'POST', body: JSON.stringify({ reason }) }),
   statement: (id: number, account: number, start: string, end: string) => apiFetch<BankStatement>(`/banking/institution/${id}/accounts/${account}/statement?${new URLSearchParams({start, end})}`),
 }
-export interface MoneyAccount { id: number; name: string; kind: 'cash' | 'bank'; bank_name?: string; account_last_four?: string; opening_date: string; opening_balance?: number | string }
+export interface MoneyAccount { institution_id?: number | null; id: number; name: string; kind: 'cash' | 'bank'; bank_name?: string; account_last_four?: string; opening_date: string; opening_balance?: number | string }
 export interface BankTransfer { id: number; source_id: number; destination_id: number; transfer_date: string; amount: number | string; status: string; reference?: string; cancellation_reason?: string }
 export interface BankStatement { account_id: number; account_name: string; start_date: string; end_date: string; opening_balance: number | string; closing_balance: number | string; money_in: number | string; money_out: number | string; entries: {id: number; institution_id?: number; kind: string; date: string; reference: string; money_in: number | string; money_out: number | string; balance: number | string}[] }
 
 export interface OrganisationSettings { configured: boolean; name: string; banking_mode: 'independent' | 'shared' | null; banking_locked: boolean; can_manage: boolean }
+export type LoginBranding = { display_name: string; tagline: string; logo_path: string | null }
+export const brandingLogoUrl = (path: string) => `${BASE_URL}${path}`
 export const organisationApi = {
+  branding: async (): Promise<LoginBranding> => {
+    const response = await fetch(`${BASE_URL}/organisation/branding`, { cache: "no-store" })
+    if (!response.ok) throw new Error("Could not load login branding")
+    return response.json()
+  },
+  saveBranding: (data: { display_name: string; tagline: string }) => apiFetch<LoginBranding>("/organisation/branding", { method: "PUT", body: JSON.stringify(data) }),
+  uploadBrandingLogo: (file: File) => apiFetch<LoginBranding>("/organisation/branding/logo", { method: "POST", headers: { "Content-Type": file.type }, body: file }),
+  removeBrandingLogo: () => apiFetch<LoginBranding>("/organisation/branding/logo", { method: "DELETE" }),
   get: () => apiFetch<OrganisationSettings>('/organisation'),
   save: (data: { name: string; banking_mode: string }) => apiFetch<OrganisationSettings>('/organisation', { method: 'PUT', body: JSON.stringify(data) }),
   linkBank: (account: number, institution: number) => apiFetch(`/organisation/bank-accounts/${account}/institutions/${institution}`, {method: "POST"}),
   banks: () => apiFetch<MoneyAccount[]>('/organisation/bank-accounts'),
   createBank: (data: unknown) => apiFetch<MoneyAccount>('/organisation/bank-accounts', { method: 'POST', body: JSON.stringify(data) }),
   statement: (id: number, start: string, end: string) => apiFetch<BankStatement>(`/organisation/bank-accounts/${id}/statement?${new URLSearchParams({start,end})}`),
+}
+
+
+export interface AssistanceApplication {
+ id: number; reference: string; institution_id: number; applicant_name: string; phone: string | null; address: string;
+ household_details: string | null; assistance_type: string; application_date: string; requested_amount: string | number;
+ paid_amount?: string | number; remaining_amount?: string | number;
+ payments?: {id:number;number:string;date:string;amount:number|string;status:string;money_account_id:number;payment_method:string;reference:string|null;acknowledgement:string|null;cancellation_reason:string|null}[];
+ approved_amount: string | number | null; purpose: string; status: string; assigned_to: number | null;
+ events?: {id:number;action:string;notes:string;actor_name:string;created_at:string;visit_date:string|null;recommendation:string|null}[];
+ documents?: {id:number;filename:string;mime_type:string;size:number}[];
+}
+export const assistanceApi = {
+ pay: (id:number,app:number,data:unknown) => apiFetch(`/assistance/institution/${id}/applications/${app}/payments`,{method:'POST',body:JSON.stringify(data)}),
+ cancelPayment: (id:number,app:number,expense:number,reason:string) => apiFetch(`/assistance/institution/${id}/applications/${app}/payments/${expense}/cancel`,{method:'POST',body:JSON.stringify({reason})}),
+ close: (id:number,app:number,reason:string) => apiFetch(`/assistance/institution/${id}/applications/${app}/close`,{method:'POST',body:JSON.stringify({reason})}),
+ list: (id:number, filters:Record<string,string>) => apiFetch<{items:AssistanceApplication[];total:number}>(`/assistance/institution/${id}/applications?${new URLSearchParams(filters)}`),
+ detail: (id:number, app:number) => apiFetch<AssistanceApplication>(`/assistance/institution/${id}/applications/${app}`),
+ create: (id:number,data:unknown) => apiFetch<AssistanceApplication>(`/assistance/institution/${id}/applications`,{method:'POST',body:JSON.stringify(data)}),
+ update: (id:number,app:number,data:unknown) => apiFetch<AssistanceApplication>(`/assistance/institution/${id}/applications/${app}`,{method:'PATCH',body:JSON.stringify(data)}),
+ action: (id:number,app:number,data:unknown) => apiFetch<AssistanceApplication>(`/assistance/institution/${id}/applications/${app}/actions`,{method:'POST',body:JSON.stringify(data)}),
+ officers: (id:number) => apiFetch<{id:number;name:string}[]>(`/assistance/institution/${id}/officers`),
+ upload: (id:number,app:number,file:File,document_type: "application" | "acknowledgement" = "application") => apiFetch(`/assistance/institution/${id}/applications/${app}/documents?${new URLSearchParams({filename:file.name,document_type})}`,{method:'POST',body:file,headers:{'Content-Type':file.type}}),
+ document: (id:number,app:number,document:number) => apiFetch<Blob>(`/assistance/institution/${id}/applications/${app}/documents/${document}`,{},true,true),
 }

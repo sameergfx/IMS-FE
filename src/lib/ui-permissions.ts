@@ -21,13 +21,14 @@ export function routePermission(path: string): string | null {
   if (!match) return null
   const route = match[1] || ""
   if (!route) return "dashboard.read"
+  if (route.startsWith("applications")) return "applications.read"
   if (route === "profile") return "profile.read"
   if (route.startsWith("settings/roles")) return "access.manage"
   if (route.startsWith("settings")) return "settings.read"
   const parts = route.split("/")
   if (parts[0] === "accounts") {
     if (parts[1] === "banking") return "banking.read"
-    if (parts[1] === "donations") return "receipts.create"
+    if (parts[1] === "donations") return "receipts.read"
     if (parts[1] === "daily-statement") return "statements.read"
     const module = parts[1]
     if (!["invoices", "receipts", "expenses", "statements"].includes(module)) return "access.manage"

@@ -31,14 +31,15 @@ const buildNav = (id: number): NavItem[] => [
     icon: "📒", label: "Accounts",
     children: [
       { href: `/dashboard/institution/${id}/accounts/invoices`,   label: "Invoices"   },
-      { href: `/dashboard/institution/${id}/accounts/banking`, label: "Bank & Cash" },
-      { href: `/dashboard/institution/${id}/accounts/donations`, label: "Receive Donation" },
+      { href: `/dashboard/institution/${id}/accounts/donations`, label: "Donation" },
       { href: `/dashboard/institution/${id}/accounts/receipts`,   label: "Receipts"   },
       { href: `/dashboard/institution/${id}/accounts/expenses`,   label: "Expenses"   },
       { href: `/dashboard/institution/${id}/accounts/daily-statement`, label: "Daily Statement" },
       { href: `/dashboard/institution/${id}/accounts/statements`, label: "Statements" },
+      { href: `/dashboard/institution/${id}/accounts/banking`, label: "Bank & Cash" },
     ],
   },
+  { href: `/dashboard/institution/${id}/applications`, icon: "📋", label: "Applications & Assistance" },
   { href: `/dashboard/institution/${id}/settings`, icon: "⚙", label: "Settings"   },
   { href: `/dashboard/institution/${id}/settings/roles`, icon: "🔐", label: "Roles & Permissions" },
   { href: `/dashboard/institution/${id}/profile`,  icon: "👤", label: "My Profile" },
@@ -55,13 +56,13 @@ export default function InstitutionSidebar({
   const { logout, clearInstitution, selectedInstitution } = useAuth()
   const displayedInstitution = selectedInstitution?.id === institution.id ? selectedInstitution : institution
   const allowedTypes = institutionUserTypes(selectedInstitution?.id === institution.id ? selectedInstitution.institution_type : institution.institution_type)
-  const NAV = buildNav(institution.id).map(item => item.label === "Users" ? {
+  const NAV = buildNav(institution.id).filter(item => item.label !== "Applications & Assistance" || ["zakat_cell", "social_welfare"].includes(displayedInstitution.institution_type)).map(item => item.label === "Users" ? {
     ...item,
     children: item.children?.filter(child => {
       const type = child.href.split("/").pop()
       return type === "users" || type === "create" || allowedTypes.some(allowed => allowed === type)
     }),
-  } : item).map(item => item.children ? { ...item, children: item.children.filter(child => can(routePermission(child.href) || "access.manage")) } : item)
+  } : item).map(item => item.children ? { ...item, children: item.children.filter(child => !(["Invoices", "Receipts"].includes(child.label) && ["zakat_cell", "social_welfare"].includes(displayedInstitution.institution_type))).filter(child => can(routePermission(child.href) || "access.manage")) } : item)
     .filter(item => item.children ? item.children.length > 0 : can(routePermission(item.href || "") || "access.manage"))
 
   const [openMenus, setOpenMenus] = useState<string[]>(

@@ -4,7 +4,7 @@
 .sub { color: var(--slate); font-size: .875rem; margin: .3rem 0 1rem; }
 .button { background: var(--blue); color: white; padding: .65rem 1rem; border: none; border-radius: var(--radius); cursor: pointer; font-weight: 600; }
 .button:disabled { opacity: .5; cursor: not-allowed; }
-.filters { display: flex; flex-wrap: wrap; gap: 1rem; }
+.filters { display: flex; align-items: flex-end; flex-wrap: wrap; gap: .75rem; }
 .filters label { display: flex; flex-direction: column; gap: .4rem; font-size: .85rem; color: var(--slate); }
 .filters input, .filters select { background: white; border: 1px solid var(--border); border-radius: var(--radius); color: var(--navy); padding: .6rem .8rem; font: inherit; }
 .note { color: var(--slate); font-size: .85rem; margin: 1rem 0 1.5rem; }
@@ -53,4 +53,33 @@
   .report, .report * { background: white !important; color: black !important; box-shadow: none !important; }
   .summary > div { border: 1px solid #ccc; }
   .table th, .table td { border-color: #ccc; }
+}
+
+@media screen {
+  .filters label { min-width: 0; flex: 0 1 auto; }
+  .filters label:has(input[type="search"]) { flex: 1 1 220px; }
+  .filters input, .filters select { box-sizing: border-box; height: 40px; min-width: 0; max-width: 100%; }
+  .filters input[type="search"] { width: 100%; }
+  .filters input[type="date"] { width: 150px; }
+  .filters select { max-width: 220px; }
+}
+@media screen and (max-width: 600px) {
+  .filters label { flex: 1 1 140px; }
+  .filters label:has(input[type="search"]) { flex-basis: 100%; }
+  .filters input, .filters select, .filters input[type="date"] { width: 100%; max-width: none; }
+}
+
+.filterPanel { background: white; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 1.15rem 1.25rem; margin-bottom: 1.5rem; }
+.filterPanel .filters { gap: 1rem; }
+.filterPanel .filters label { font-size: .78rem; font-weight: 600; color: var(--navy); }
+.filterPanel .filters input, .filterPanel .filters select { min-width: 155px; border-radius: 8px; font-weight: 400; }
+.filterPanel .filters input:focus-visible, .filterPanel .filters select:focus-visible, .printButton:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.printButton { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; margin-left: auto; font-size: .85rem; white-space: nowrap; border-radius: 8px; }
+.printButton:hover:not(:disabled) { background: #1d4ed8; }
+.filterMessage { margin: 1rem 0 0; padding: .85rem 1rem; border-radius: 8px; background: #f8fafc; color: #64748b; font-size: .8rem; line-height: 1.6; border-left: 3px solid #cbd5e1; }
+@media screen and (max-width: 600px) {
+  .filterPanel { padding: 1rem; }
+  .filterPanel .filters { gap: .75rem; }
+  .filterPanel .filters input, .filterPanel .filters select { min-width: 0; }
+  .printButton { width: 100%; margin-left: 0; }
 }

@@ -90,8 +90,8 @@
 .title { font-family: var(--font-head); font-size: 1.6rem; font-weight: 700; color: var(--navy); }
 .sub { color: var(--slate); font-size: .875rem; margin-top: .2rem; }
 
-.toolbar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
-.search { flex: 1; min-width: 220px; max-width: 360px; padding: .6rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: .9rem; outline: none; }
+.toolbar { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+.search { flex: 1 1 220px; min-width: 180px; padding: .6rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: .9rem; outline: none; }
 .search:focus { border-color: var(--blue); }
 
 .filters { display: flex; gap: .4rem; flex-wrap: wrap; }
@@ -131,3 +131,5 @@
 .iconBtnDelete:hover { border-color: var(--danger); color: var(--danger); background: #fee2e2; }
 
 .state { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 3rem; text-align: center; color: var(--slate); }
+
+@media (max-width: 600px) { .toolbar > .search { flex-basis: 100%; min-width: 0; } }

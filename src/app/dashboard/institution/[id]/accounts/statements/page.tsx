@@ -49,9 +49,9 @@ export default function StatementsPage() {
     <div data-statement-print className={`${styles.page} ${styles.report}`}>
       <div className={styles.header}>
         <div><h1 className={styles.title}>Statement</h1><p className={`${styles.sub} ${styles.controls}`}>Institution receipts and expenses</p></div>
-        <button className={`${styles.button} ${styles.controls}`} onClick={() => { if (current) printReport(current.institution_name, "statement") }} disabled={!valid || loading || !current}>Print / Save PDF</button>
       </div>
-      <div className={`${styles.filters} ${styles.controls}`}>
+      <section className={`${styles.filterPanel} ${styles.controls}`} aria-label="Statement filters">
+      <div className={styles.filters}>
         <label>Period<select value={period} onChange={event => setPeriod(event.target.value)}>
           <option value="today">Today</option><option value="monthly">Monthly</option><option value="custom">Custom date range</option>
         </select></label>
@@ -60,8 +60,10 @@ export default function StatementsPage() {
           <label>From<input type="date" value={from} max={to || undefined} onChange={event => setFrom(event.target.value)} /></label>
           <label>To<input type="date" value={to} min={from || undefined} onChange={event => setTo(event.target.value)} /></label>
         </>}
+        <button className={`${styles.button} ${styles.printButton}`} onClick={() => { if (current) printReport(current.institution_name, "statement") }} disabled={!valid || loading || !current}>Print / Save PDF</button>
       </div>
-      <p className={`${styles.note} ${styles.controls}`}>Balances reflect recorded receipts minus expenses, across all payment methods. Cancelled records are excluded. Opening balance includes transactions before the selected period.</p>
+      <p className={styles.filterMessage}>Balances reflect recorded receipts minus expenses, across all payment methods. Cancelled records are excluded. Opening balance includes transactions before the selected period.</p>
+      </section>
       {!valid ? <div className={styles.state} role="alert">Select a valid date range; the end date must be on or after the start date.</div>
         : loading ? <div className={styles.state}>Loading statement...</div>
         : error ? <div className={styles.state} role="alert">{error}</div>

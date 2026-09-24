@@ -137,16 +137,15 @@ export default function InvoiceDetailPage() {
           <h1 className={styles.title}>{invoice.invoice_number}</h1>
           <span className={`${styles.status} ${statusStyle}`}>{invoice.status.replace("_", " ")}</span>
         </div>
-        {invoice.status !== "paid" && invoice.status !== "cancelled" && (
-          <div className={styles.headerActions}>
+        <div className={styles.headerActions}>
+          {invoice.status !== "cancelled" && invoice.status !== "paid" && hasPermission("invoices.update") && <PermissionGate action="invoices.update"><Link className={styles.partialBtn} href={`/dashboard/institution/${id}/accounts/invoices/${iid}/edit`}>Edit Invoice</Link></PermissionGate>}
+          {invoice.status !== "paid" && invoice.status !== "cancelled" && <>
             <PermissionGate action="receipts.create"><button className={styles.partialBtn} onClick={() => openPayModal(false)}>Record Partial Payment</button></PermissionGate>
             <PermissionGate action="receipts.create"><button className={styles.payBtn} onClick={() => openPayModal(true)}>Record Full Payment</button></PermissionGate>
-          </div>
-        )}
+          </>}
+          <BillDocument invoice={invoice} inline />
+        </div>
       </div>
-
-      {invoice.status !== "cancelled" && hasPermission("invoices.update") && <PermissionGate action="invoices.update"><Link className={styles.partialBtn} href={`/dashboard/institution/${id}/accounts/invoices/${iid}/edit`}>Edit Invoice</Link></PermissionGate>}
-      <BillDocument invoice={invoice} />
 
       {/* Invoice card */}
       <div className={styles.card}>
@@ -220,14 +219,13 @@ export default function InvoiceDetailPage() {
             <p className={styles.modalSub}>Balance due: ₹{Number(invoice.balance_due).toLocaleString()}</p>
 
             <form onSubmit={handlePay} className={styles.modalForm}>
-              <MoneyAccountSelect institutionId={Number(id)} method={payForm.payment_method} value={moneyAccount} onChange={setMoneyAccount} />
-              <div className={styles.field}>
+              <div className={styles.amountRow}><div className={styles.field}>
                 <label className={styles.label}>Amount Paid *</label>
                 <input className={styles.input} type="number" min="0" max={invoice.balance_due} step="0.01"
                   value={payForm.amount_paid} onChange={e => setPayField("amount_paid", e.target.value)} required />
               </div>
 
-              <button type="button" className={styles.input} disabled={!itemBalances || paying} onClick={() => distribute(payForm.amount_paid)}>Auto-distribute top to bottom</button>
+              <button type="button" className={styles.distributeBtn} disabled={!itemBalances || paying} onClick={() => distribute(payForm.amount_paid)} title="Allocate the amount to items from top to bottom">Auto-distribute</button></div>
               {!itemBalances && !payError && <p>Loading item balances...</p>}
               {itemBalances?.legacy_estimate && <p>Earlier payments without item allocations are estimated proportionally.</p>}
               {itemBalances?.items.map(item => <div className={styles.field} key={item.invoice_item_id}>
@@ -253,6 +251,8 @@ export default function InvoiceDetailPage() {
                   </select>
                 </div>
               </div>
+
+              <MoneyAccountSelect institutionId={Number(id)} method={payForm.payment_method} value={moneyAccount} onChange={setMoneyAccount} />
 
               <div className={styles.grid2}>
                 <div className={styles.field}>

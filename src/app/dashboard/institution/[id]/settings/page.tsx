@@ -88,7 +88,7 @@ export default function SettingsPage() {
               </label>)}
               <label className={styles.item}><span className={styles.label}>Institution type</span>
                 <select value={form.institution_type} onChange={event => setForm({ ...form, institution_type: event.target.value as Institution["institution_type"] })}>
-                  <option value="educational">Educational</option><option value="masjid">Masjid</option>
+                  <option value="educational">Educational</option><option value="masjid">Masjid</option><option value="zakat_cell">Zakat Cell</option><option value="social_welfare">Social Welfare</option>
                 </select>
               </label>
               <label className={`${styles.item} ${styles.fullWidth}`}><span className={styles.label}>Address</span>

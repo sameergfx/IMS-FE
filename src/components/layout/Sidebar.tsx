@@ -13,7 +13,7 @@ import {
   Building2,
 } from "lucide-react";
 
-import { useAppSelector } from "@/store/hooks";
+import { useAuth } from "@/lib/auth-context";
 
 const menu = [
   {
@@ -57,9 +57,7 @@ export default function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
 
-  const selectedInstitution = useAppSelector(
-    (state) => state.institution.selectedInstitution
-  );
+  const { selectedInstitution } = useAuth();
 
   return (
     <aside

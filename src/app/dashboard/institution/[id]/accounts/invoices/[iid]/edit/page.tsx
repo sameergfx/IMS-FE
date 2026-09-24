@@ -27,6 +27,7 @@ export default function EditInvoicePage() {
         if (!active) return
         if (inv.institution_id !== Number(id)) throw new Error("Invoice does not belong to this institution")
         if (inv.status === "cancelled") throw new Error("Cancelled invoices cannot be edited")
+        if (inv.status === "paid") throw new Error("Fully paid invoices cannot be edited")
         setInvoice(inv); setCategories(cats)
         setLocked(Number(inv.paid_amount) > 0 || receipts.length > 0)
         setForm({ invoice_date: inv.invoice_date, due_date: inv.due_date || "", description: inv.description || "", academic_year: inv.academic_year || "", discount: String(inv.discount) })
@@ -62,7 +63,7 @@ export default function EditInvoicePage() {
   if (loading || permissionsLoading) return <p>Loading invoice…</p>
   if (!hasPermission("invoices.update")) return <p role="alert">You do not have permission to edit invoices.</p>
   if (!invoice) return <p role="alert">{error || "Invoice not found"}</p>
-  return <div className={styles.page}>
+  return <div className={`${styles.page} ${styles.invoicePage}`}>
     <div className={styles.header}><button className={styles.backBtn} onClick={() => router.back()}>← Back</button><h1 className={styles.title}>Edit {invoice.invoice_number}</h1></div>
     {locked && <p className={styles.hint}>This invoice has receipt history. You can update its due date, description and academic year. Items, amounts and invoice date are locked.</p>}
     <form className={styles.form} onSubmit={save}>

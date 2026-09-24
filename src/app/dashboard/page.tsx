@@ -1,5 +1,6 @@
 "use client"
 
+import { institutionTypeLabel } from "@/lib/institution-types"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import Link from "next/link"
@@ -128,7 +129,7 @@ export default function DashboardPage() {
               </div>
               <div className={styles.cardBody}>
                 <h2 className={styles.instName}>{inst.name}</h2>
-                <p className={styles.instMeta}>{inst.institution_type === "masjid" ? "Masjid" : "Educational"}</p>
+                <p className={styles.instMeta}>{institutionTypeLabel(inst.institution_type)}</p>
                 {inst.place && <p className={styles.instMeta}>📍 {inst.place}</p>}
                 {inst.phone && <p className={styles.instMeta}>📞 {inst.phone}</p>}
                 {inst.email && <p className={styles.instMeta}>✉ {inst.email}</p>}
@@ -161,7 +162,7 @@ export default function DashboardPage() {
                   <select id="new-institution-type" className={styles.input} value={form.institution_type}
                     onChange={event => setField("institution_type", event.target.value)}>
                     <option value="educational">Educational — Students, Teachers and Staff</option>
-                    <option value="masjid">Masjid — Members and Staff</option>
+                    <option value="masjid">Masjid — Members and Staff</option><option value="zakat_cell">Zakat Cell — Members and Staff</option><option value="social_welfare">Social Welfare — Members and Staff</option>
                   </select>
                 </div>
                 <div className={styles.grid2}>

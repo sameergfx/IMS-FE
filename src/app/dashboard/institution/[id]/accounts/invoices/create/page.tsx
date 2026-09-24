@@ -150,7 +150,7 @@ export default function CreateInvoicePage() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} ${styles.invoicePage}`}>
 
       <div className={styles.header}>
         <div>

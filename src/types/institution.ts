@@ -1,4 +1,4 @@
-export type InstitutionType = "educational" | "masjid"
+export type InstitutionType = "educational" | "masjid" | "zakat_cell" | "social_welfare"
 
 export interface Institution {
   short_name: string | null
