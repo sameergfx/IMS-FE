@@ -1,16 +1,21 @@
 "use client"
 
 import { useId, useRef, useState } from "react"
+import useAdmissionPhoto from "@/components/admission/useAdmissionPhoto"
 import { usersApi } from "@/lib/api"
 import styles from "./UserPhotoField.module.css"
 
-export default function UserPhotoField({ value, onChange, onBusyChange, disabled = false, uploadPhoto = usersApi.uploadPhoto }: {
+export default function UserPhotoField({ value, onChange, onBusyChange, disabled = false, institutionId, studentId, uploadPhoto = usersApi.uploadPhoto }: {
+  institutionId?: number
+  studentId?: number
   value?: string | null
   onChange: (url: string | null) => void
   onBusyChange: (busy: boolean) => void
   uploadPhoto?: (file: File) => Promise<{ url: string }>
   disabled?: boolean
 }) {
+  const admission = useAdmissionPhoto(institutionId,studentId)
+  const preview=value||admission.photo
   const id = useId()
   const pending = useRef(false)
   const [busy, setBusy] = useState(false)
@@ -30,9 +35,11 @@ export default function UserPhotoField({ value, onChange, onBusyChange, disabled
     finally { pending.current = false; setBusy(false); onBusyChange(false) }
   }
   return <div className={styles.field}>
-    <div className={styles.preview}>{value ? <img src={value} alt="User photo preview" /> : <span>No photo</span>}</div>
+    <div className={styles.preview}>{preview ? <img src={preview} alt="User photo preview" /> : <span>No photo</span>}</div>
     <div className={styles.controls}>
       <label htmlFor={id}>User photo</label>
+      {!value&&admission.photo&&<small>Photo from admission application. Upload a photo to replace the profile preview.</small>}
+      {!value&&admission.error&&<p role="alert">{admission.error}</p>}
       <input id={id} type="file" accept="image/png,image/jpeg,image/webp" disabled={disabled || busy} onChange={event => { const file = event.target.files?.[0]; event.target.value = ""; void upload(file) }} />
       <small>PNG, JPEG or WebP · Maximum 2 MB. Save the form to apply changes.</small>
       {busy && <span role="status">Uploading photo…</span>}

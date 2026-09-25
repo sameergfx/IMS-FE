@@ -1,0 +1,26 @@
+.filters { margin-bottom: 1.25rem; }
+.badge { display: inline-block; padding: .25rem .7rem; border-radius: 20px; font-size: .75rem; font-weight: 600; text-transform: capitalize; }
+.submitted { background: #dbeafe; color: #1d4ed8; }
+.verified { background: #fef3c7; color: #92400e; }
+.admitted { background: #dcfce7; color: #166534; }
+.rejected { background: #fee2e2; color: #991b1b; }
+.withdrawn { background: #f1f5f9; color: #475569; }
+.pagination { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; padding: 1rem 0; margin-bottom: 1rem; }
+.pagination span { margin-right: auto; color: var(--slate); font-size: .85rem; }
+.details { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: .925rem; color: #111; }
+.details th, .details td { padding: .4rem 1rem; border: 1px solid #e2e8f0; text-align: left; vertical-align: top; overflow-wrap: anywhere; line-height: 1.6; }
+.details th { width: 32%; font-weight: 600; background: #fafbfc; text-transform: capitalize; }
+.details td { white-space: pre-wrap; }
+@media (max-width:600px) { .details th, .details td { padding: .6rem .65rem; } .details th { width: 38%; } }
+.event { padding: .6rem 0; border-bottom: 1px solid var(--border); font-size: .825rem; line-height: 1.45; }
+.event p { margin: .2rem 0; font-size: inherit; line-height: inherit; white-space: pre-wrap; }
+.event strong { font-size: inherit; font-weight: 600; }
+.event:last-child { border-bottom: 0; padding-bottom: 0; }
+
+
+.sectionTitle { font-size: 1.15rem !important; font-weight: 700; color: #111 !important; background: #f5f7f9; border: 0; border-radius: .4rem; padding: .8rem 1rem; margin-bottom: 1rem; }
+
+.uploadRow { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); align-items: end; gap: 1rem; margin: 1rem 0; }
+.fileInput { width: 100%; min-width: 0; padding: .55rem; border: 1px solid #e2e8f0; border-radius: .5rem; background: #fff; color: #111; }
+.fileInput::file-selector-button { padding: .45rem .75rem; margin-right: .75rem; border: 1px solid #cbd5e1; border-radius: .35rem; background: #f5f7f9; color: #111; cursor: pointer; }
+@media (max-width:600px) { .uploadRow { grid-template-columns: 1fr; } }

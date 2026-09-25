@@ -43,7 +43,7 @@ export interface UserResponse {
   city:           string | null
   state:          string | null
   country:        string | null
-  email:          string
+  email:          string | null
   phone:          string | null
   user_type:      UserType
   institution_id: number | null

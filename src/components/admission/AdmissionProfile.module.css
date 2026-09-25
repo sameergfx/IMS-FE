@@ -1,0 +1,9 @@
+.table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: .925rem; color: #111; }
+.table th, .table td { padding: .4rem 1rem; border: 1px solid #e2e8f0; text-align: left; vertical-align: top; overflow-wrap: anywhere; line-height: 1.6; }
+.table th { width: 32%; font-weight: 600; background: #fafbfc; text-transform: capitalize; }
+.table td { white-space: pre-wrap; }
+@media (max-width:600px) { .table th, .table td { padding: .6rem .65rem; } .table th { width: 38%; } }
+
+.table .table { font-size: inherit; }
+.table ul { margin: 0; padding-left: 1.15rem; }
+.table li + li { margin-top: .5rem; }

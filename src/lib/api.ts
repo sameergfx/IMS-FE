@@ -332,3 +332,31 @@ export const assistanceApi = {
  upload: (id:number,app:number,file:File,document_type: "application" | "acknowledgement" = "application") => apiFetch(`/assistance/institution/${id}/applications/${app}/documents?${new URLSearchParams({filename:file.name,document_type})}`,{method:'POST',body:file,headers:{'Content-Type':file.type}}),
  document: (id:number,app:number,document:number) => apiFetch<Blob>(`/assistance/institution/${id}/applications/${app}/documents/${document}`,{},true,true),
 }
+
+export interface AdmissionApplication {
+ print_theme_color?:string;
+ id:number; institution_id:number; reference:string; applicant_name:string; email:string|null; template_version:string; extra_data:Record<string,unknown>|null; admitted_on:string|null; phone:string; date_of_birth:string; gender:string; address:string; guardian_name:string; guardian_phone:string; academic_year:string; grade:string; notes:string; status:string; student_id:number|null; admission_number?:string|null;
+ documents?:{id:number;filename:string;size:number;document_type?:string}[];
+ events?:{id:number;action:string;notes:string;actor_name:string;created_at:string}[];
+}
+export const admissionApi = {
+ removeDocument:(id:number,app:number,document:number)=>apiFetch(`/admission/institution/${id}/applications/${app}/documents/${document}`,{method:'DELETE'}),
+ update:(id:number,app:number,data:unknown)=>apiFetch<AdmissionApplication>(`/admission/institution/${id}/applications/${app}`,{method:'PATCH',body:JSON.stringify(data)}),
+ studentDocument:(id:number,user:number,document:number)=>apiFetch<Blob>(`/admission/institution/${id}/students/${user}/documents/${document}`,{},true,true),
+ template:(id:number)=>apiFetch<{version:string;declaration:string[];configuration:AdmissionFormConfig|null;revision:number|null}>(`/admission/institution/${id}/template`),
+ studentProfile:(id:number,user:number)=>apiFetch<{template_version:string;extra_data:Record<string,unknown>;application_id:number;documents:{id:number;filename:string;document_type:string}[]}|null>(`/admission/institution/${id}/students/${user}/profile`),
+ list:(id:number,query:Record<string,string>)=>apiFetch<{total:number;items:AdmissionApplication[]}>(`/admission/institution/${id}/applications?${new URLSearchParams(query)}`),
+ create:(id:number,data:unknown)=>apiFetch<AdmissionApplication>(`/admission/institution/${id}/applications`,{method:'POST',body:JSON.stringify(data)}),
+ detail:(id:number,app:number)=>apiFetch<AdmissionApplication>(`/admission/institution/${id}/applications/${app}`),
+ action:(id:number,app:number,data:unknown)=>apiFetch<AdmissionApplication>(`/admission/institution/${id}/applications/${app}/actions`,{method:'POST',body:JSON.stringify(data)}),
+ students:(id:number,q:string)=>apiFetch<{id:number;name:string;email:string}[]>(`/admission/institution/${id}/existing-students?q=${encodeURIComponent(q)}`),
+ upload:(id:number,app:number,file:File,kind="supporting")=>apiFetch(`/admission/institution/${id}/applications/${app}/documents?filename=${encodeURIComponent(file.name)}&document_type=${encodeURIComponent(kind)}`,{method:'POST',body:file,headers:{'Content-Type':file.type}}),
+ document:(id:number,app:number,document:number)=>apiFetch<Blob>(`/admission/institution/${id}/applications/${app}/documents/${document}`,{},true,true),
+}
+
+export interface AdmissionCustomField { id:string; label:string; type:'text'|'number'|'date'|'dropdown'|'boolean'|'long_text'; options:string[]; section:string; required:boolean; show_in_print:boolean; save_to_profile:boolean }
+export interface AdmissionFormConfig { theme_color?:string; fields:AdmissionCustomField[]; common:Record<string,{visible:boolean;required:boolean}>; declaration:string[]; required_documents:string[]; signature_label:string }
+export const admissionSettingsApi={
+ get:(id:number)=>apiFetch<{version:number|null;configuration:AdmissionFormConfig}>(`/admission/institution/${id}/form-settings`),
+ publish:(id:number,configuration:AdmissionFormConfig)=>apiFetch<{version:number;configuration:AdmissionFormConfig}>(`/admission/institution/${id}/form-settings`,{method:'POST',body:JSON.stringify(configuration)}),
+}

@@ -15,7 +15,7 @@ interface Props {
 export default function UserEditModal({ user, onClose, onSave }: Props) {
   const [form, setForm] = useState({
     full_name: user.full_name,
-    email:     user.email,
+    email:     user.email || "",
     phone:     user.phone || "",
     is_active: user.is_active,
   })
@@ -27,7 +27,7 @@ export default function UserEditModal({ user, onClose, onSave }: Props) {
   const handleSave = async () => {
     setError("")
     if (!form.full_name.trim()) { setError("Name is required"); return }
-    if (!form.email.trim()) { setError("Email is required"); return }
+    if (user.email && !form.email.trim()) { setError("Email is required"); return }
 
     setSaving(true)
     try {

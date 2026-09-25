@@ -1,0 +1,8 @@
+import {AdmissionFormConfig} from '@/lib/api'
+import styles from '@/app/dashboard/institution/[id]/accounts/invoices/create/create.module.css'
+export default function CustomAdmissionFields({config,answers,onChange}:{config:AdmissionFormConfig;answers:Record<string,unknown>;onChange:(answers:Record<string,unknown>)=>void}){
+ return <>{Array.from(new Set(config.fields.map(f=>f.section))).map(section=><section key={section} style={{marginTop:'1.5rem'}}><h2 className={styles.cardTitle}>{section}</h2><div className={styles.grid2}>{config.fields.filter(f=>f.section===section).map(f=>{
+ const value=answers[f.id];const change=(v:unknown)=>onChange({...answers,[f.id]:v})
+ return <label key={f.id} className={styles.field}>{f.label}{f.required?' *':''}{f.type==='dropdown'||f.type==='boolean'?<select className={styles.input} required={f.required} value={value==null?'':String(value)} onChange={e=>change(e.target.value===''?null:f.type==='boolean'?e.target.value==='true':e.target.value)}><option value="">Select</option>{f.type==='boolean'?<><option value="true">Yes</option><option value="false">No</option></>:f.options.map(o=><option key={o}>{o}</option>)}</select>:f.type==='long_text'?<textarea className={styles.input} rows={3} maxLength={5000} required={f.required} value={String(value??'')} onChange={e=>change(e.target.value)}/>:<input className={styles.input} type={f.type} step={f.type==='number'?'any':undefined} maxLength={500} required={f.required} value={String(value??'')} onChange={e=>change(f.type==='number'?(e.target.value===''?null:Number(e.target.value)):e.target.value)}/>}</label>
+ })}</div></section>)}</>
+}

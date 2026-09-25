@@ -67,7 +67,7 @@ export default function UserDetailPage({ data, onChange }: { data: any; onChange
       setUser(u)
       setForm({
         full_name: u.full_name,
-        email:     u.email,
+        email:     u.email || "",
         phone:     u.phone || "",
         is_active: u.is_active,
       })
@@ -136,7 +136,7 @@ export default function UserDetailPage({ data, onChange }: { data: any; onChange
     setSuccess("")
 
     if (!form.full_name.trim()) { setError("Name required"); return }
-    if (!form.email.trim()) { setError("Email required"); return }
+    if (user?.email && !form.email.trim()) { setError("Email required"); return }
 
     setSaving(true)
     try {
@@ -197,7 +197,7 @@ export default function UserDetailPage({ data, onChange }: { data: any; onChange
         <h1 className={styles.title}>Edit User</h1>
       </div>
 
-      <UserPhotoField value={metaForm.profile_photo} onChange={url => setMetaField("profile_photo", url)} onBusyChange={setPhotoUploading} disabled={saving || photoUploading} />
+      <UserPhotoField institutionId={Number(id)} studentId={user.user_type === "student" ? Number(uid) : undefined} value={metaForm.profile_photo} onChange={url => setMetaField("profile_photo", url)} onBusyChange={setPhotoUploading} disabled={saving || photoUploading} />
       <InstitutionRolePanel userId={Number(uid)} institutionId={Number(id)} />
       <div className={styles.card}>
         <h2 className={styles.cardTitle}>User Information</h2>
@@ -206,7 +206,7 @@ export default function UserDetailPage({ data, onChange }: { data: any; onChange
         </div>
         <div className={styles.formGroup}>
           {f("Full Name *", "full_name", "text", "", user.full_name, true)}
-          {f("Email *", "email", "email", "eg: user@example.com", user.email, true)}
+          {f("Email *", "email", "email", "eg: user@example.com", user.email || "", Boolean(user.email))}
           {f("Phone", "phone", "tel", "Optional", user.phone || "", false)}
           <div className={styles.field}>
             <label className={styles.checkbox}>

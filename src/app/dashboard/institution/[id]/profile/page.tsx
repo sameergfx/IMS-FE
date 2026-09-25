@@ -35,7 +35,7 @@ export default function MyProfilePage() {
 
     setForm({
       full_name: user.full_name,
-      email:     user.email,
+      email:     user.email || "",
       phone:     user.phone || "",
     })
 

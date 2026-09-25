@@ -2,6 +2,7 @@
 export type AccessContext = { isSuperadmin: boolean; isAdmin: boolean; hasPermission: (code: string) => boolean }
 export function canUse(action: string, access: AccessContext): boolean {
   if (access.isSuperadmin) return true
+  if (action === "admission.configure") return access.isAdmin
   if (action === "profile.read") return true
   if (action === "access.manage") return false
   if (action.startsWith("settings.")) return access.isAdmin || access.hasPermission(action)
@@ -21,8 +22,10 @@ export function routePermission(path: string): string | null {
   if (!match) return null
   const route = match[1] || ""
   if (!route) return "dashboard.read"
+  if (route.startsWith("admission")) return route === "admission/apply" ? "admission.create" : route.endsWith("/edit") ? "admission.update" : "admission.read"
   if (route.startsWith("applications")) return "applications.read"
   if (route === "profile") return "profile.read"
+  if (route === "settings/admission") return "admission.configure"
   if (route.startsWith("settings/roles")) return "access.manage"
   if (route.startsWith("settings")) return "settings.read"
   const parts = route.split("/")

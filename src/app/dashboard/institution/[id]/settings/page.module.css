@@ -5,3 +5,12 @@
 .card button { padding: .65rem 1rem; border: none; border-radius: var(--radius); background: var(--blue); color: white; cursor: pointer; }
 .card button:disabled { opacity: .6; cursor: not-allowed; }
 .fieldset{border:0;padding:0;margin:0;min-width:0}.heading{font-size:1rem;font-weight:600;margin:0 0 1.25rem;color:var(--navy)}.item input,.item textarea{width:100%;box-sizing:border-box;padding:.7rem;border:1px solid var(--border);border-radius:var(--radius);background:white;color:var(--navy);font:inherit}.fullWidth{grid-column:1/-1}.checkbox{display:flex;align-items:center;gap:.5rem;font-size:.9rem}.logoRow{display:flex;align-items:center;gap:1.5rem}.logo,.logoPlaceholder{width:100px;height:100px;flex-shrink:0;border:1px solid var(--border);border-radius:var(--radius);object-fit:contain;padding:.5rem}.logoPlaceholder{display:grid;place-items:center;color:var(--slate)}.logoRow small{color:var(--slate)}.actions{display:flex;gap:.75rem}.actions button{padding:.75rem 1.2rem;border:0;border-radius:var(--radius);background:var(--blue);color:white;cursor:pointer}.page button.secondary{background:#eef2f6;color:var(--navy)}.page button:disabled{opacity:.6;cursor:not-allowed}.error{color:#b42318;margin-top:1rem}.success{color:#067647;margin-top:1rem}@media(max-width:600px){.grid{grid-template-columns:1fr}.logoRow{align-items:flex-start;flex-direction:column}.actions{flex-wrap:wrap}}
+
+.admissionSettingsLink { display: flex; flex-direction: column; gap: .4rem; margin: 1rem 0; padding: 1rem 1.25rem; border: 1px solid #dbe3ed; border-radius: var(--radius); background: #f5f7fa; color: var(--navy); text-decoration: none; }
+.admissionSettingsLink span { font-size: .875rem; color: var(--slate); }
+.admissionSettingsLink:hover { border-color: var(--blue); }
+
+.publishActions { padding: 1rem 0; margin-top: .5rem; margin-bottom: 1.5rem; }
+.page .publishButton { background: #1d4ed8; color: #fff; border: 1px solid #1d4ed8; border-radius: 8px; min-height: 46px; padding: .8rem 1.4rem; font-size: .95rem; font-weight: 600; box-shadow: 0 2px 5px #1d4ed826; }
+.page .publishButton:hover:not(:disabled) { background: #1e40af; border-color: #1e40af; }
+.page .publishButton:focus-visible { outline: 3px solid #93c5fd; outline-offset: 3px; }

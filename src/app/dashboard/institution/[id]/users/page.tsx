@@ -45,7 +45,7 @@ export default function UsersPage() {
 
   const filtered = users.filter(u => {
     const matchSearch = u.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
+      (u.email || "").toLowerCase().includes(search.toLowerCase())
     const matchFilter = filter === "all" || u.user_type === filter
     return matchSearch && matchFilter
   })

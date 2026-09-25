@@ -39,6 +39,11 @@ const buildNav = (id: number): NavItem[] => [
       { href: `/dashboard/institution/${id}/accounts/banking`, label: "Bank & Cash" },
     ],
   },
+  { icon: "🎓", label: "Admission", children: [
+    { href: `/dashboard/institution/${id}/admission`, label: "Applications" },
+    { href: `/dashboard/institution/${id}/admission/apply`, label: "Apply / New Application" },
+    { href: `/dashboard/institution/${id}/settings/admission`, label: "Form Settings" },
+  ] },
   { href: `/dashboard/institution/${id}/applications`, icon: "📋", label: "Applications & Assistance" },
   { href: `/dashboard/institution/${id}/settings`, icon: "⚙", label: "Settings"   },
   { href: `/dashboard/institution/${id}/settings/roles`, icon: "🔐", label: "Roles & Permissions" },
@@ -56,7 +61,7 @@ export default function InstitutionSidebar({
   const { logout, clearInstitution, selectedInstitution } = useAuth()
   const displayedInstitution = selectedInstitution?.id === institution.id ? selectedInstitution : institution
   const allowedTypes = institutionUserTypes(selectedInstitution?.id === institution.id ? selectedInstitution.institution_type : institution.institution_type)
-  const NAV = buildNav(institution.id).filter(item => item.label !== "Applications & Assistance" || ["zakat_cell", "social_welfare"].includes(displayedInstitution.institution_type)).map(item => item.label === "Users" ? {
+  const NAV = buildNav(institution.id).filter(item => item.label !== "Admission" || displayedInstitution.institution_type === "educational").filter(item => item.label !== "Applications & Assistance" || ["zakat_cell", "social_welfare"].includes(displayedInstitution.institution_type)).map(item => item.label === "Users" ? {
     ...item,
     children: item.children?.filter(child => {
       const type = child.href.split("/").pop()
@@ -66,7 +71,7 @@ export default function InstitutionSidebar({
     .filter(item => item.children ? item.children.length > 0 : can(routePermission(item.href || "") || "access.manage"))
 
   const [openMenus, setOpenMenus] = useState<string[]>(
-    pathname.includes("/accounts/") ? ["Accounts"] : []
+    pathname.includes("/accounts/") ? ["Accounts"] : pathname.includes("/admission") ? ["Admission"] : []
   )
 
   const toggle = (label: string) =>

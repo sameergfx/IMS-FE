@@ -1,4 +1,6 @@
 "use client"
+import { useUiAccess } from "@/components/access/PermissionGate"
+import Link from "next/link"
 import { useEffect, useState } from "react"
 import { institutionsApi } from "@/lib/api"
 import { Institution } from "@/types/institution"
@@ -12,6 +14,7 @@ const fields = [
 ] as const
 
 export default function SettingsPage() {
+  const { can } = useUiAccess()
   const { selectedInstitution: inst, updateSelectedInstitution, user } = useAuth()
   const [form, setForm] = useState<Institution | null>(null)
   const [logoFile, setLogoFile] = useState<File | null>(null)
@@ -52,7 +55,7 @@ export default function SettingsPage() {
   if (!form || !inst) return null
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>Settings</h1>
+      <h1 className={styles.title}>Settings</h1>{inst.institution_type==="educational"&&can("admission.configure")&&<Link className={styles.admissionSettingsLink} href={`/dashboard/institution/${inst.id}/settings/admission`}><strong>Admission Form Settings →</strong><span>Configure fields, required documents, declarations and print layout.</span></Link>}
       <p className={styles.sub}>Update institution details and logo.</p>
       {!canEdit && <p className={styles.sub}>Admin access is required to edit these settings.</p>}
       <form onSubmit={save}>

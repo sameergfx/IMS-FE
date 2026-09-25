@@ -40,7 +40,8 @@ export default function UsersPage() {
 
   const filtered = users.filter(u => {
     const matchSearch = u.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
+      (u.guardian_email || "").toLowerCase().includes(search.toLowerCase()) ||
+      (u.guardian_phone || "").includes(search.trim())
     const matchFilter = filter === "all" || u.user_type === filter
     return matchSearch && matchFilter
   })
@@ -67,7 +68,7 @@ export default function UsersPage() {
       </div>
 
       <div className={styles.toolbar}>
-        <input className={styles.search} placeholder="Search by name..."
+        <input className={styles.search} placeholder="Search by name, guardian phone or email..."
           value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
@@ -81,8 +82,8 @@ export default function UsersPage() {
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Phone</th>
-                <th>Email</th>
+                <th>Guardian Phone</th>
+                <th>Guardian Email</th>
                 <th>Type</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -100,8 +101,8 @@ export default function UsersPage() {
                       <PartyBadge userId={u.id} compact />
                     </div>
                   </td>
-                  <td>{u.phone || "-"}</td>
-                  <td className={styles.email}>{u.email}</td>
+                  <td>{u.guardian_phone || "-"}</td>
+                  <td className={styles.email}>{u.guardian_email || "-"}</td>
                   <td><span className={styles.typeBadge}>{u.user_type}</span></td>
                   <td>
                     <span className={`${styles.status} ${u.is_active ? styles.active : styles.inactive}`}>

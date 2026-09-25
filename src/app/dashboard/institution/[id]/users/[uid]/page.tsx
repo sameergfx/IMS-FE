@@ -1,4 +1,5 @@
 "use client"
+import StudentAdmissionProfile from "@/components/admission/StudentAdmissionProfile"
 import PermissionGate from "@/components/access/PermissionGate"
 
 import { useEffect, useState } from "react"
@@ -58,7 +59,7 @@ export default function UserDetailPage() {
       setUser(u)
       setForm({
         full_name: u.full_name,
-        email:     u.email,
+        email:     u.email || "",
         phone:     u.phone || "",
         is_active: u.is_active,
       })
@@ -113,7 +114,7 @@ export default function UserDetailPage() {
     setSuccess("")
 
     if (!form.full_name.trim()) { setError("Name required"); return }
-    if (!form.email.trim()) { setError("Email required"); return }
+    if (user?.email && !form.email.trim()) { setError("Email required"); return }
 
     setSaving(true)
     try {
@@ -197,7 +198,7 @@ export default function UserDetailPage() {
         <h1 className={styles.title}>Edit User</h1>
       </div>
 
-      <UserPhotoField value={metaForm.profile_photo} onChange={url => setMetaField("profile_photo", url)} onBusyChange={setPhotoUploading} disabled={saving || photoUploading} />
+      <UserPhotoField institutionId={Number(id)} studentId={user.user_type === "student" ? Number(uid) : undefined} value={metaForm.profile_photo} onChange={url => setMetaField("profile_photo", url)} onBusyChange={setPhotoUploading} disabled={saving || photoUploading} />
       <div className={styles.card}>
         <h2 className={styles.cardTitle}>User Information</h2>
         <div className={styles.partySection}>
@@ -263,6 +264,7 @@ export default function UserDetailPage() {
       <TemporaryAccessPanel userId={Number(uid)} institutionId={Number(id)} />
 
       {/* Meta fields by user type */}
+      {user.user_type === "student" && <StudentAdmissionProfile institutionId={Number(id)} userId={Number(uid)} />}
       {user.user_type === "student" && (
         <div className={styles.card}>
           <h2 className={styles.cardTitle}>Student Details</h2>

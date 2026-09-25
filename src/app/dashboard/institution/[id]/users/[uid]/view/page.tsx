@@ -1,4 +1,6 @@
 "use client"
+import useAdmissionPhoto from "@/components/admission/useAdmissionPhoto"
+import StudentAdmissionProfile from "@/components/admission/StudentAdmissionProfile"
 import PermissionGate from "@/components/access/PermissionGate"
 
 import { useEffect, useState } from "react"
@@ -43,6 +45,8 @@ export default function UserViewPage({ data, onChange }: { data: any; onChange: 
       .finally(() => setLoading(false))
   }, [uid])
 
+  const admissionPhoto=useAdmissionPhoto(Number(id),user?.user_type === "student" ? Number(uid) : undefined)
+
   if (loading) return <div className={styles.state}>Loading user...</div>
   if (!user) return <div className={styles.state}>User not found.</div>
 
@@ -68,6 +72,8 @@ export default function UserViewPage({ data, onChange }: { data: any; onChange: 
       <InstitutionRolePanel userId={Number(uid)} institutionId={Number(id)} />
       <div className={styles.card}>
         <h2 className={styles.cardTitle}>User Information</h2>
+        {(meta?.profile_photo||admissionPhoto.photo)&&<img src={meta?.profile_photo||admissionPhoto.photo} alt={`${user.full_name} photo`} style={{width:105,height:130,objectFit:"contain",borderRadius:8,marginBottom:"1rem"}}/>}
+        {!meta?.profile_photo&&admissionPhoto.error&&<p role="alert">{admissionPhoto.error}</p>}
         <div className={styles.partySection}>
           <PartyBadge userId={user.id} />
         </div>
@@ -86,6 +92,7 @@ export default function UserViewPage({ data, onChange }: { data: any; onChange: 
       </div>
 
       {/* Meta sections by user type */}
+      {user.user_type === "student" && <StudentAdmissionProfile institutionId={Number(id)} userId={Number(uid)} />}
       {user.user_type === "student" && (
         <div className={styles.card}>
           <h2 className={styles.cardTitle}>Student Details</h2>

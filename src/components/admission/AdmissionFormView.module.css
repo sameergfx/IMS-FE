@@ -1,0 +1,51 @@
+.toolbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:1rem; }
+.toolbar h2 { font-size:1.1rem; font-weight:600; }
+.toolbar p { color:var(--slate); font-size:.85rem; margin-top:.3rem; }
+.toolbar button { background:var(--blue); color:white; padding:.65rem 1rem; border:0; border-radius:8px; font-size:.85rem; font-weight:600; cursor:pointer; }
+.toolbar button:disabled { opacity:.5; cursor:not-allowed; }
+.preview { overflow-x:auto; background:#e8edf2; padding:1rem; border-radius:12px; }
+.document { color:#111; font:13px Georgia,'Times New Roman',serif; }
+.sheet { width:190mm; min-height:275mm; margin:0 auto 1rem; background:#fff; box-sizing:border-box; display:flex; flex-direction:column; box-shadow:0 2px 12px #0002; }
+.sheet:last-child { margin-bottom:0; }
+.header { display:flex; align-items:center; gap:12px; padding:16px; }
+.brand { width:105px; height:130px; flex-shrink:0; display:flex; align-items:center; justify-content:flex-start; text-align:left; }
+.brand img { width:105px; height:130px; object-fit:contain; object-position:left center; }
+.brand h2 { font:bold 15px Arial,sans-serif; margin-top:8px; }
+.applicationNumber { flex:1; }
+.photo { width:105px; height:130px; flex-shrink:0; border:1px solid #777; display:flex; align-items:center; justify-content:center; text-align:center; }
+.photo img { width:100%; height:100%; object-fit:contain; }
+.band { background:var(--admission-theme,#ed1722); color:var(--admission-theme-text,#fff); text-align:center; font:bold 16px Arial,sans-serif; padding:7px; margin:0; }
+.body { padding:12px 16px; }
+.field { display:flex; align-items:baseline; gap:8px; margin:9px 0; flex:1; min-width:0; }
+.field > span { flex-shrink:0; }
+.value { border:1px solid #aaa; padding:5px 7px; min-height:26px; flex:1; white-space:pre-wrap; overflow-wrap:anywhere; }
+.row { display:flex; gap:12px; }
+.row .field { flex-wrap:wrap; }
+.sectionTitle { margin:12px 0 7px; }
+.document table { border-collapse:collapse; width:100%; table-layout:fixed; }
+.document th,.document td { border:1px solid #aaa; padding:7px; overflow-wrap:anywhere; white-space:pre-wrap; text-align:left; font-weight:normal; height:30px; }
+.document thead th { background:var(--admission-theme,#ed1722); color:var(--admission-theme-text,#fff); font-weight:bold; text-align:center; }
+.document tr { break-inside:avoid; }
+.addressRow td { height:100px; vertical-align:top; }
+.guardian { border:1px solid #aaa; padding:8px; min-height:58px; white-space:pre-wrap; }
+.guardian p { margin:2px 0; }
+.sheet footer { margin-top:auto; background:var(--admission-theme,#ed1722); color:var(--admission-theme-text,#fff); font:10px Arial,sans-serif; text-align:center; padding:8px; overflow-wrap:anywhere; }
+.body > .band { margin:22px -16px 18px; }
+.declarationIntro { line-height:1.8; }
+.declaration { padding-left:24px; margin:16px 0; }
+.declaration li { line-height:1.8; padding:4px 0; }
+.signatureRow { display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:32px; }
+.signatureBox { height:75px; border:1px solid #aaa; }
+.signatureRow p { text-align:center; margin-top:8px; }
+.receiptNote { font-size:11px; color:#555; margin-top:16px; }
+.office { margin-top:auto; }
+.office + footer { margin-top:10px; }
+@media print {
+ .sheet { width:100%; min-height:275mm; margin:0; box-shadow:none; break-after:page; }
+ .sheet:last-child { break-after:auto; }
+ .document { font-size:12px; }
+ .sheet .body { padding:10px 14px; }
+ .header,.field,.guardian,.signatureRow,.office { break-inside:avoid; }
+}
+
+@media print { .sheet table tr { break-inside: avoid; } .sheet table { width: 100%; } }
